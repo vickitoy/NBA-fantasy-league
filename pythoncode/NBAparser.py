@@ -67,6 +67,9 @@ def calc_remaining_wins(vicki, johnny, taro):
     vwins_remain = 0
     jwins_remain = 0
     twins_remain = 0
+    vwins_not_guaranteed = 0
+    jwins_not_guaranteed = 0
+    twins_not_guaranteed = 0
     
     for game in np.unique(nba_sched_remain.index):
     
@@ -78,12 +81,18 @@ def calc_remaining_wins(vicki, johnny, taro):
             at = away_teams[i].split()[-1]
             if (any(ht == np.array(vicki)) | any(at == np.array(vicki))):
                 vwins_remain += 1
+                if not (any(ht == np.array(vicki)) & any(at == np.array(vicki))):
+                    vwins_not_guaranteed += 1
         
             if (any(ht == np.array(johnny)) | any(at == np.array(johnny))):
                 jwins_remain += 1
+                if not (any(ht == np.array(johnny)) & any(at == np.array(johnny))):
+                    jwins_not_guaranteed += 1
 
             if (any(ht == np.array(taro)) | any(at == np.array(taro))):
                 twins_remain += 1
+                if not (any(ht == np.array(taro)) & any(at == np.array(taro))):
+                    twins_not_guaranteed += 1
     
     return vwins_remain, jwins_remain, twins_remain
         
