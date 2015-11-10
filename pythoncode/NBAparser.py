@@ -74,8 +74,8 @@ def calc_remaining_wins(vicki, johnny, taro):
         away_teams = nba_sched_remain.loc[game, 'Visitor/Neutral']
         
         for i in range(len(home_teams)):
-            ht = home_teams[i].split()[1]
-            at = away_teams[i].split()[1]
+            ht = home_teams[i].split()[-1]
+            at = away_teams[i].split()[-1]
             if (any(ht == np.array(vicki)) | any(at == np.array(vicki))):
                 vwins_remain += 1
         
