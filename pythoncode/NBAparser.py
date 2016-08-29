@@ -55,7 +55,7 @@ def makejson(json_text, alt=False, aftertrade=False):
         johnny = johnny_orig
         taro   = taro_orig
         
-    print vicki
+    #print vicki
                
     data = json.loads(json_text)
     
@@ -79,7 +79,7 @@ def makejson(json_text, alt=False, aftertrade=False):
     
     vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
     
-        #print teamname, teamwins,teamloss
+    #print teamname, teamwins,teamloss
     #print 'Vicki ', vwins, vloss, vwins_remain
     #print 'Johnny ', jwins, jloss, jwins_remain
     #print 'Taro ', twins, tloss, twins_remain
@@ -91,7 +91,7 @@ def makejson(json_text, alt=False, aftertrade=False):
 def calc_remaining_wins(vicki, johnny, taro):
 
     # Upload the current schedule
-    nba_sched = pd.read_csv('2015_schedule.txt', index_col=0)
+    nba_sched = pd.read_csv('/Users/vickitoy/Sideprojects/NBA-fantasy-league/pythoncode/2015_schedule.txt', index_col=0)
     
     # Convert the date to a Timestamp
     nba_sched.index = pd.to_datetime(nba_sched.index)
@@ -177,11 +177,18 @@ def parser(alt=False):
     [[vwins_at,vloss_at,vwins_remain_at], 
      [jwins_at,jloss_at,jwins_remain_at],
      [twins_at,tloss_at,twins_remain_at]]  = makejson(json_text, alt=alt, aftertrade=True)
-
     
-    print 'Vicki ', vwins_bt+vwins_at, vloss_bt+vloss_at, vwins_remain_at
-    print 'Johnny ', jwins_bt+jwins_at, jloss_bt+jloss_at, jwins_remain_at
-    print 'Taro ', twins_bt+twins_at, tloss_bt+tloss_at, twins_remain_at
+    #print 'Vicki ', vwins_bt+vwins_at, vloss_bt+vloss_at, vwins_remain_at
+    #print 'Johnny ', jwins_bt+jwins_at, jloss_bt+jloss_at, jwins_remain_at
+    #print 'Taro ', twins_bt+twins_at, tloss_bt+tloss_at, twins_remain_at
     
+   
+    out = {'vwins':vwins_bt+vwins_at,'vloss':vloss_bt+vloss_at, 'vremain':vwins_remain_at,
+          'jwins':jwins_bt+jwins_at,'jloss':jloss_bt+jloss_at, 'jremain':jwins_remain_at,
+          'twins':twins_bt+twins_at,'tloss':tloss_bt+tloss_at, 'tremain':twins_remain_at }
+          
+    print json.dumps(out, sort_keys=True)
     
+if __name__ == '__main__':
+    parser()
     
