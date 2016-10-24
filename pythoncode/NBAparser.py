@@ -45,6 +45,12 @@ def main():
     # Plot the graph and save as image
     plot_graph(wins_losses)
     
+    # Generate updated HTML file
+    current_totals = pd.DataFrame(index=['Vicki', 'Johnny', 'Taro'], columns=['wins', 'losses', 'remaining'])
+    current_totals.loc['Vicki'] = [vwins, vloss, vwins_remain]
+    current_totals.loc['Johnny'] = [jwins, jloss, jwins_remain]
+    current_totals.loc['Taro'] = [twins, tloss, twins_remain]
+    make_html(current_totals)
 
     return
 
@@ -220,3 +226,18 @@ def plot_graph(wins_losses):
     
     return 
     
+def make_html(current_totals):
+
+    with open('../template.html', 'r') as ftemp:
+        temp = ftemp.read()
+    
+    current_totals = current_totals.sort_values('wins', ascending=False)
+    current_winner = current_totals.index[0]    
+    updated = temp % (current_winner,
+                      current_totals.loc['Johnny']['wins'], current_totals.loc['Johnny']['losses'], current_totals.loc['Johnny']['remaining'],
+                      current_totals.loc['Taro']['wins'], current_totals.loc['Taro']['losses'], current_totals.loc['Taro']['remaining'],
+                      current_totals.loc['Vicki']['wins'], current_totals.loc['Vicki']['losses'], current_totals.loc['Vicki']['remaining'])
+                      
+    with open('../index.html', 'w') as findex:
+        findex.write(updated)
+        
