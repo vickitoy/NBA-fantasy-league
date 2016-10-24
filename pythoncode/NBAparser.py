@@ -1,6 +1,7 @@
 import pandas as pd
 import datetime as dt
 import numpy as np
+import matplotlib.pyplot as plt
 import seaborn as sn
 from nba_py import team
 
@@ -34,7 +35,20 @@ def main():
     
     vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
     
-    create_graph(vicki_ids, johnny_ids, taro_ids)
+    wins_losses = create_graph_data(vicki_ids, johnny_ids, taro_ids)
+    
+    # Plot winning percentage as a function of time
+    sn.set(color_codes=True)
+    fig = plt.figure(figsize=(12, 4))
+    ax = fig.add_subplot(111)
+    ax.plot(wins_losses['vicki_wins']/(wins_losses['vicki_wins']+wins_losses['vicki_losses']), 'r-', label='Vicki')
+    ax.plot(wins_losses['taro_wins']/(wins_losses['taro_wins']+wins_losses['taro_losses']), 'b-', label='Taro')
+    ax.plot(wins_losses['johnny_wins']/(wins_losses['johnny_wins']+wins_losses['johnny_losses']), 'g-', label='Johnny')
+    ax.set_xlabel('Date', fontsize=14)
+    ax.set_ylabel('Winning Percentage')
+    ax.legend(loc='upper right')
+    fig.savefig('win_percent.png', bbox_inches='tight')
+    plt.close(fig)
 
     return [[vwins,vloss,vwins_remain], 
             [jwins,jloss,jwins_remain],
