@@ -7,6 +7,7 @@ from nba_py import team
 
 def main():
     
+    # Upload each of our teams from separate text files
     vicki = np.loadtxt('vicki_teams15-16.txt', dtype=str)
     johnny = np.loadtxt('johnny_teams15-16.txt', dtype=str)
     taro = np.loadtxt('taro_teams15-16.txt', dtype=str, delimiter='\t')
@@ -15,6 +16,7 @@ def main():
     johnny_ids = []
     taro_ids = []
     
+    # Get the IDs for each team
     for t in team.TEAMS.keys():
         
         tm = team.TEAMS[t]
@@ -27,32 +29,24 @@ def main():
             taro_ids.append(tm['id'])
         else:
             raise ValueError('{0} not on any team!'.format(tm['name']))
-
+    
+    # Calculate total wins and losses to date
     vrecord, jrecord, trecord = calc_current_wins(vicki_ids, johnny_ids, taro_ids)
     vwins = vrecord[0]; vloss = vrecord[1]
     jwins = jrecord[0]; jloss = jrecord[1]
     twins = trecord[0]; tloss = trecord[1]
     
+    # Calculate maximum remaining wins left
     vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
     
+    # Calculate each W-L record as a function of time for graph
     wins_losses = create_graph_data(vicki_ids, johnny_ids, taro_ids)
     
-    # Plot winning percentage as a function of time
-    sn.set(color_codes=True)
-    fig = plt.figure(figsize=(12, 4))
-    ax = fig.add_subplot(111)
-    ax.plot(wins_losses['vicki_wins']/(wins_losses['vicki_wins']+wins_losses['vicki_losses']), 'r-', label='Vicki')
-    ax.plot(wins_losses['taro_wins']/(wins_losses['taro_wins']+wins_losses['taro_losses']), 'b-', label='Taro')
-    ax.plot(wins_losses['johnny_wins']/(wins_losses['johnny_wins']+wins_losses['johnny_losses']), 'g-', label='Johnny')
-    ax.set_xlabel('Date', fontsize=14)
-    ax.set_ylabel('Winning Percentage')
-    ax.legend(loc='upper right')
-    fig.savefig('win_percent.png', bbox_inches='tight')
-    plt.close(fig)
+    # Plot the graph and save as image
+    plot_graph(wins_losses)
+    
 
-    return [[vwins,vloss,vwins_remain], 
-            [jwins,jloss,jwins_remain],
-            [twins,tloss,twins_remain]]
+    return
 
 def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
 
@@ -135,7 +129,7 @@ def create_graph_data(vids, jids, tids):
 
     today = dt.date.today()
     str_today = '%i/%i/%i' % (today.month, today.day, today.year)
-    sched_dates = pd.date_range(start='10/27/2015', end=str_today)
+    sched_dates = pd.date_range(start='10/25/2016', end=str_today)
     
     df = pd.DataFrame(index=sched_dates, columns=['vicki_wins', 'vicki_losses', 
                                                   'johnny_wins', 'johnny_losses',
@@ -208,4 +202,21 @@ def create_graph_data(vids, jids, tids):
             df.loc[s:e, 'taro_losses'] = df.loc[s:e, 'taro_losses'] + data.loc[s, 'L'] 
     
     return df       
+ 
+
+def plot_graph(wins_losses): 
+     # Plot winning percentage as a function of time
+    sn.set(color_codes=True)
+    fig = plt.figure(figsize=(12, 4))
+    ax = fig.add_subplot(111)
+    ax.plot(wins_losses['vicki_wins']/(wins_losses['vicki_wins']+wins_losses['vicki_losses']), 'r-', label='Vicki')
+    ax.plot(wins_losses['taro_wins']/(wins_losses['taro_wins']+wins_losses['taro_losses']), 'b-', label='Taro')
+    ax.plot(wins_losses['johnny_wins']/(wins_losses['johnny_wins']+wins_losses['johnny_losses']), 'g-', label='Johnny')
+    ax.set_xlabel('Date', fontsize=14)
+    ax.set_ylabel('Winning Percentage')
+    ax.legend(loc='upper right')
+    fig.savefig('win_percent.png', bbox_inches='tight')
+    plt.close(fig)
+    
+    return 
     
