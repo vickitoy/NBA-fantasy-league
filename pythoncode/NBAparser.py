@@ -133,7 +133,10 @@ def calc_remaining_wins(vicki, johnny, taro):
 
 def create_graph_data(vids, jids, tids):
 
-    sched_dates = pd.date_range(start='10/27/2015', end='4/13/2016')
+    today = dt.date.today()
+    str_today = '%i/%i/%i' % (today.month, today.day, today.year)
+    sched_dates = pd.date_range(start='10/27/2015', end=str_today)
+    
     df = pd.DataFrame(index=sched_dates, columns=['vicki_wins', 'vicki_losses', 
                                                   'johnny_wins', 'johnny_losses',
                                                   'taro_wins', 'taro_losses'])
