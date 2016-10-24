@@ -5,55 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 from nba_py import team
 
-def main():
-    
-    # Upload each of our teams from separate text files
-    vicki = np.loadtxt('vicki_teams15-16.txt', dtype=str)
-    johnny = np.loadtxt('johnny_teams15-16.txt', dtype=str)
-    taro = np.loadtxt('taro_teams15-16.txt', dtype=str, delimiter='\t')
-    
-    vicki_ids = []
-    johnny_ids = []
-    taro_ids = []
-    
-    # Get the IDs for each team
-    for t in team.TEAMS.keys():
-        
-        tm = team.TEAMS[t]
-        
-        if np.any(vicki == tm['name']):
-            vicki_ids.append(tm['id'])
-        elif np.any(johnny == tm['name']):
-            johnny_ids.append(tm['id'])
-        elif np.any(taro == tm['name']):
-            taro_ids.append(tm['id'])
-        else:
-            raise ValueError('{0} not on any team!'.format(tm['name']))
-    
-    # Calculate total wins and losses to date
-    vrecord, jrecord, trecord = calc_current_wins(vicki_ids, johnny_ids, taro_ids)
-    vwins = vrecord[0]; vloss = vrecord[1]
-    jwins = jrecord[0]; jloss = jrecord[1]
-    twins = trecord[0]; tloss = trecord[1]
-    
-    # Calculate maximum remaining wins left
-    vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
-    
-    # Calculate each W-L record as a function of time for graph
-    wins_losses = create_graph_data(vicki_ids, johnny_ids, taro_ids)
-    
-    # Plot the graph and save as image
-    plot_graph(wins_losses)
-    
-    # Generate updated HTML file
-    current_totals = pd.DataFrame(index=['Vicki', 'Johnny', 'Taro'], columns=['wins', 'losses', 'remaining'])
-    current_totals.loc['Vicki'] = [vwins, vloss, vwins_remain]
-    current_totals.loc['Johnny'] = [jwins, jloss, jwins_remain]
-    current_totals.loc['Taro'] = [twins, tloss, twins_remain]
-    make_html(current_totals)
-
-    return
-
 def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
 
     vwins = 0; vloss = 0
@@ -242,3 +193,51 @@ def make_html(current_totals):
         findex.write(updated)
         
     return
+
+
+if __name__ == '__main__':
+    
+    # Upload each of our teams from separate text files
+    vicki = np.loadtxt('vicki_teams16-17.txt', dtype=str)
+    johnny = np.loadtxt('johnny_teams16-17.txt', dtype=str)
+    taro = np.loadtxt('taro_teams16-17.txt', dtype=str, delimiter='\t')
+    
+    vicki_ids = []
+    johnny_ids = []
+    taro_ids = []
+    
+    # Get the IDs for each team
+    for t in team.TEAMS.keys():
+        
+        tm = team.TEAMS[t]
+        
+        if np.any(vicki == tm['name']):
+            vicki_ids.append(tm['id'])
+        elif np.any(johnny == tm['name']):
+            johnny_ids.append(tm['id'])
+        elif np.any(taro == tm['name']):
+            taro_ids.append(tm['id'])
+        else:
+            raise ValueError('{0} not on any team!'.format(tm['name']))
+    
+    # Calculate total wins and losses to date
+    vrecord, jrecord, trecord = calc_current_wins(vicki_ids, johnny_ids, taro_ids)
+    vwins = vrecord[0]; vloss = vrecord[1]
+    jwins = jrecord[0]; jloss = jrecord[1]
+    twins = trecord[0]; tloss = trecord[1]
+    
+    # Calculate maximum remaining wins left
+    vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
+    
+    # Calculate each W-L record as a function of time for graph
+    wins_losses = create_graph_data(vicki_ids, johnny_ids, taro_ids)
+    
+    # Plot the graph and save as image
+    plot_graph(wins_losses)
+    
+    # Generate updated HTML file
+    current_totals = pd.DataFrame(index=['Vicki', 'Johnny', 'Taro'], columns=['wins', 'losses', 'remaining'])
+    current_totals.loc['Vicki'] = [vwins, vloss, vwins_remain]
+    current_totals.loc['Johnny'] = [jwins, jloss, jwins_remain]
+    current_totals.loc['Taro'] = [twins, tloss, twins_remain]
+    make_html(current_totals)
