@@ -35,7 +35,7 @@ def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
 def calc_remaining_wins(vicki, johnny, taro):
 
     # Upload the current schedule
-    nba_sched = pd.read_csv('2015_schedule.txt', index_col=0)
+    nba_sched = pd.read_csv('2016_schedule.txt', index_col=0)
     
     # Convert the date to a Timestamp
     nba_sched.index = pd.to_datetime(nba_sched.index)
