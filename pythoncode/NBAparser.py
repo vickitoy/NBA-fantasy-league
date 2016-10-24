@@ -241,3 +241,4 @@ def make_html(current_totals):
     with open('../index.html', 'w') as findex:
         findex.write(updated)
         
+    return
