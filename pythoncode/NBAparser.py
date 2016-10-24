@@ -15,48 +15,15 @@ def getpage(htmlpage):
     return html
 
 
-def makejson(json_text, alt=False, aftertrade=False):
+def makejson(json_text):
 
-    vicki_orig  = ['Spurs', 'Rockets', 'Grizzlies', 'Heat', 'Wizards', 
-              'Bucks', 'Mavericks', 'Magic', 'Nets', 'Knicks']
-    johnny_orig = ['Warriors', 'Thunder', 'Celtics', 'Pelicans', 'Bulls',
-              'Jazz', 'Suns', 'Timberwolves', 'Nuggets', 'Lakers']
-    taro_orig   = ['Cavaliers', 'Clippers', 'Hawks', 'Raptors', 'Hornets',
-             'Pacers', 'Pistons', 'Kings', 'Blazers', '76ers']
-              
-
-    tradedate = 'March 16'
+    vicki  = ['Cavaliers', 'Clippers', 'Blazers', 'Grizzlies', 'Pacers',
+                'Mavericks', 'Bulls', 'Heat', 'Suns', '76ers']
+    johnny = ['Warriors', 'Celtics', 'Jazz', 'Hawks', 'Pistons',
+               'Timberwolves', 'Bucks', 'Magic', 'Nuggets', 'Lakers']
+    taro   = ['Spurs', 'Raptors', 'Rockets', 'Hornets','Thunder',
+                'Wizards', 'Pelicans', 'Knicks', 'Kings', 'Nets']
     
-    # Thunder for Nets
-    vicki_trade1  = ['Spurs', 'Rockets', 'Grizzlies', 'Heat', 'Wizards', 
-              'Bucks', 'Mavericks', 'Magic', 'Thunder', 'Knicks']
-    johnny_trade1 = ['Warriors', 'Nets', 'Celtics', 'Pelicans', 'Bulls',
-              'Jazz', 'Suns', 'Timberwolves', 'Nuggets', 'Lakers']
-    taro_trade1   = ['Cavaliers', 'Clippers', 'Hawks', 'Raptors', 'Hornets',
-             'Pacers', 'Pistons', 'Kings', 'Blazers', '76ers']    
-
-
-
-    if alt == True:
-        vicki  = ['Spurs', 'Clippers', 'Hawks', 'Heat', 'Wizards', 
-                'Rockets', 'Nuggets', 'Pelicans', '76ers', 'Knicks']
-        johnny = ['Warriors', 'Raptors', 'Celtics', 'Grizzlies', 'Bulls',
-                'Jazz', 'Pacers', 'Timberwolves', 'Kings', 'Lakers']
-        taro   = ['Cavaliers', 'Thunder', 'Hornets', 'Mavericks', 'Blazers',
-                'Magic', 'Pistons', 'Bucks', 'Suns', 'Nets']
-    
-    if aftertrade == True:
-        vicki  = vicki_trade1
-        johnny = johnny_trade1
-        taro   = taro_trade1
-        
-    if aftertrade == False:
-        vicki  = vicki_orig
-        johnny = johnny_orig
-        taro   = taro_orig
-        
-    #print vicki
-               
     data = json.loads(json_text)
     
     vwins = 0; vloss = 0
@@ -138,56 +105,27 @@ def calc_remaining_wins(vicki, johnny, taro):
     return vwins_remain, jwins_remain, twins_remain
         
     
-    
 def parser(alt=False):
-    #website = 'http://stats.nba.com/stats/leaguedashteamstats?Season=2015' +\
-    #            '-16&AllStarSeason&SeasonType=Regular%20Season&LeagueID=00&' +\
-    #            'MeasureType=Base&PerMode=PerGame&PlusMinus=N&PaceAdjust=N&' +\
-    #            'Rank=N&Outcome&Location&Month=0&SeasonSegment&DateFrom&Date' +\
-    #            'To&OpponentTeamID=0&VsConference&VsDivision&GameSegment&' +\
-    #            'Period=0&LastNGames=0&GameScope&PlayerExperience&Player' +\
-    #            'Position&StarterBench'
-
-    # Before trade date
-    website_bt = 'http://stats.nba.com/stats/leaguedashteamstats?Season=2015' +\
-                '-16&AllStarSeason&SeasonType=Regular%20Season&LeagueID=00&' +\
+    website = 'http://stats.nba.com/stats/leaguedashteamstats?Season=2016' +\
+                '-17&AllStarSeason&SeasonType=Regular%20Season&LeagueID=00&' +\
                 'MeasureType=Base&PerMode=PerGame&PlusMinus=N&PaceAdjust=N&' +\
                 'Rank=N&Outcome&Location&Month=0&SeasonSegment&DateFrom&Date' +\
-                'To=March15&OpponentTeamID=0&VsConference&VsDivision&GameSegment&' +\
-                'Period=0&LastNGames=0&GameScope&PlayerExperience&Player' +\
-                'Position&StarterBench'
-                                
-    #print website
-    json_text = getpage(website_bt)
-    [[vwins_bt,vloss_bt,vwins_remain_bt], 
-     [jwins_bt,jloss_bt,jwins_remain_bt],
-     [twins_bt,tloss_bt,twins_remain_bt]] = makejson(json_text, alt=alt, aftertrade=False)
-    
-    # After trade date
-    website_at = 'http://stats.nba.com/stats/leaguedashteamstats?Season=2015' +\
-                '-16&AllStarSeason&SeasonType=Regular%20Season&LeagueID=00&' +\
-                'MeasureType=Base&PerMode=PerGame&PlusMinus=N&PaceAdjust=N&' +\
-                'Rank=N&Outcome&Location&Month=0&SeasonSegment&DateFrom=March16&Date' +\
                 'To&OpponentTeamID=0&VsConference&VsDivision&GameSegment&' +\
                 'Period=0&LastNGames=0&GameScope&PlayerExperience&Player' +\
                 'Position&StarterBench'
-                
+                            
     #print website
-    json_text = getpage(website_at)
-    [[vwins_at,vloss_at,vwins_remain_at], 
-     [jwins_at,jloss_at,jwins_remain_at],
-     [twins_at,tloss_at,twins_remain_at]]  = makejson(json_text, alt=alt, aftertrade=True)
-    
-    #print 'Vicki ', vwins_bt+vwins_at, vloss_bt+vloss_at, vwins_remain_at
-    #print 'Johnny ', jwins_bt+jwins_at, jloss_bt+jloss_at, jwins_remain_at
-    #print 'Taro ', twins_bt+twins_at, tloss_bt+tloss_at, twins_remain_at
-    
+    json_text = getpage(website)
+    [[vwins,vloss,vwins_remain], 
+     [jwins,jloss,jwins_remain],
+     [twins,tloss,twins_remain]] = makejson(json_text)
+
    
-    out = {'vwins':vwins_bt+vwins_at,'vloss':vloss_bt+vloss_at, 'vremain':vwins_remain_at,
-          'jwins':jwins_bt+jwins_at,'jloss':jloss_bt+jloss_at, 'jremain':jwins_remain_at,
-          'twins':twins_bt+twins_at,'tloss':tloss_bt+tloss_at, 'tremain':twins_remain_at }
-          
-    print json.dumps(out, sort_keys=True)
+    out = {'vwins':vwins,'vloss':vloss, 'vremain':vwins_remain,
+          'jwins':jwins,'jloss':jloss, 'jremain':jwins_remain,
+          'twins':twins,'tloss':tloss, 'tremain':twins_remain } 
+    
+    print json.dumps(out, sort_keys=True)   
     
 if __name__ == '__main__':
     parser()
