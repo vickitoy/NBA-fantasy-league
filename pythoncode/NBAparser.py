@@ -6,6 +6,7 @@ import seaborn as sn
 from nba_py import team
 
 SEASON = '2016-17'
+START_DATE = '10/25/2016'
 
 def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
 
@@ -88,7 +89,7 @@ def create_graph_data(vids, jids, tids):
 
     today = dt.date.today()
     str_today = '%i/%i/%i' % (today.month, today.day, today.year)
-    sched_dates = pd.date_range(start='10/25/2016', end=str_today)
+    sched_dates = pd.date_range(start=START_DATE, end=str_today)
     
     df = pd.DataFrame(index=sched_dates, columns=['vicki_wins', 'vicki_losses', 
                                                   'johnny_wins', 'johnny_losses',
@@ -103,62 +104,69 @@ def create_graph_data(vids, jids, tids):
     for id in vids:
         
         data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
-        data.index = pd.to_datetime(data['GAME_DATE'])
-        data = data.sort_index()
-        start_dates = data.index[0:-1]
-        end_dates = data.index[1:]
-        ed = end_dates.tolist()
-        ed[-1] = sched_dates[-1]
-        end_dates = ed
-        
-        for i,s in enumerate(start_dates):
-            if i != (len(start_dates)-1):
-                e = end_dates[i] - pd.DateOffset()
-            else:
-			    e = end_dates[i]
+        if not data.empty:
+			data.index = pd.to_datetime(data['GAME_DATE'])
+			data = data.sort_index()
+			start_dates = data.index[0:-1]
+			end_dates = data.index[1:]
+			ed = end_dates.tolist()
+			ed[-1] = sched_dates[-1]
+			end_dates = ed
+		
+			for i,s in enumerate(start_dates):
+				if i != (len(start_dates)-1):
+					e = end_dates[i] - pd.DateOffset()
+				else:
+					e = end_dates[i]
 
-            df.loc[s:e, 'vicki_wins'] = df.loc[s:e, 'vicki_wins'] + data.loc[s, 'W']
-            df.loc[s:e, 'vicki_losses'] = df.loc[s:e, 'vicki_losses'] + data.loc[s, 'L']
+				df.loc[s:e, 'vicki_wins'] = df.loc[s:e, 'vicki_wins'] + data.loc[s, 'W']
+				df.loc[s:e, 'vicki_losses'] = df.loc[s:e, 'vicki_losses'] + data.loc[s, 'L']
     
     for id in jids:
         
         data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
-        data.index = pd.to_datetime(data['GAME_DATE'])
-        data = data.sort_index()
-        start_dates = data.index[0:-1]
-        end_dates = data.index[1:]
-        ed = end_dates.tolist()
-        ed[-1] = sched_dates[-1]
-        end_dates = ed
-        
-        for i,s in enumerate(start_dates):
-            if i != (len(start_dates)-1):
-				e = end_dates[i] - pd.DateOffset()
-            else:
-			    e = end_dates[i]
+        if not data.empty:
+			data.index = pd.to_datetime(data['GAME_DATE'])
+			data = data.sort_index()
+			start_dates = data.index[0:-1]
+			end_dates = data.index[1:]
+			ed = end_dates.tolist()
+			ed[-1] = sched_dates[-1]
+			end_dates = ed
+		
+			for i,s in enumerate(start_dates):
+				if i != (len(start_dates)-1):
+					e = end_dates[i] - pd.DateOffset()
+				else:
+					e = end_dates[i]
 
-            df.loc[s:e, 'johnny_wins'] = df.loc[s:e, 'johnny_wins'] + data.loc[s, 'W']
-            df.loc[s:e, 'johnny_losses'] = df.loc[s:e, 'johnny_losses'] + data.loc[s, 'L']
-            
-            
+				df.loc[s:e, 'johnny_wins'] = df.loc[s:e, 'johnny_wins'] + data.loc[s, 'W']
+				df.loc[s:e, 'johnny_losses'] = df.loc[s:e, 'johnny_losses'] + data.loc[s, 'L']
+                       
     for id in tids:
         
         data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
-        data.index = pd.to_datetime(data['GAME_DATE'])
-        data = data.sort_index()
-        start_dates = data.index[0:-1]
-        end_dates = data.index[1:]
-        ed = end_dates.tolist()
-        ed[-1] = sched_dates[-1]
-        end_dates = ed
-        
-        for i,s in enumerate(start_dates):
-            if i != (len(start_dates)-1):
-				e = end_dates[i] - pd.DateOffset()
-            else:
-			    e = end_dates[i]
-            df.loc[s:e, 'taro_wins'] = df.loc[s:e, 'taro_wins'] + data.loc[s, 'W']
-            df.loc[s:e, 'taro_losses'] = df.loc[s:e, 'taro_losses'] + data.loc[s, 'L'] 
+        if not data.empty:
+			data.index = pd.to_datetime(data['GAME_DATE'])
+			data = data.sort_index()
+			start_dates = data.index[0:-1]
+			end_dates = data.index[1:]
+			ed = end_dates.tolist()
+			ed[-1] = sched_dates[-1]
+			end_dates = ed
+		
+			for i,s in enumerate(start_dates):
+				if i != (len(start_dates)-1):
+					e = end_dates[i] - pd.DateOffset()
+				else:
+					e = end_dates[i]
+				df.loc[s:e, 'taro_wins'] = df.loc[s:e, 'taro_wins'] + data.loc[s, 'W']
+				df.loc[s:e, 'taro_losses'] = df.loc[s:e, 'taro_losses'] + data.loc[s, 'L'] 
+				
+	df['taro_winperc'] = df['taro_wins']/(df['taro_wins']+df['taro_losses'])
+	df['vicki_winperc'] = df['vicki_wins']/(df['vicki_wins']+df['vicki_losses'])
+	df['johnny_winperc'] = df['johnny_wins']/(df['johnny_wins']+df['johnny_losses'])
+	df.fillna(value=0, inplace=True)
     
     return df       
  
@@ -168,9 +176,9 @@ def plot_graph(wins_losses):
     sn.set(color_codes=True)
     fig = plt.figure(figsize=(12, 4))
     ax = fig.add_subplot(111)
-    ax.plot(wins_losses['vicki_wins']/(wins_losses['vicki_wins']+wins_losses['vicki_losses']), 'r-', label='Vicki')
-    ax.plot(wins_losses['taro_wins']/(wins_losses['taro_wins']+wins_losses['taro_losses']), 'b-', label='Taro')
-    ax.plot(wins_losses['johnny_wins']/(wins_losses['johnny_wins']+wins_losses['johnny_losses']), 'g-', label='Johnny')
+    ax.plot(wins_losses['vicki_winperc'], 'r-', label='Vicki')
+    ax.plot(wins_losses['taro_winperc'], 'b-', label='Taro')
+    ax.plot(wins_losses['johnny_winperc'], 'g-', label='Johnny')
     ax.set_xlabel('Date', fontsize=14)
     ax.set_ylabel('Winning Percentage')
     ax.legend(loc='upper right')
