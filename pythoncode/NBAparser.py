@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 from nba_py import team
 
+SEASON = '2016-17'
+
 def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
 
     vwins = 0; vloss = 0
@@ -13,19 +15,19 @@ def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
     
     for id in vicki_ids:
         
-        ts = team.TeamSummary(id).info()
+        ts = team.TeamSummary(id, season=SEASON).info()
         vwins += ts['W'][0]
         vloss += ts['L'][0]
     
     for id in johnny_ids:
         
-        ts = team.TeamSummary(id).info()
+        ts = team.TeamSummary(id, season=SEASON).info()
         jwins += ts['W'][0]
         jloss += ts['L'][0]
         
     for id in taro_ids:
         
-        ts = team.TeamSummary(id).info()
+        ts = team.TeamSummary(id, season=SEASON).info()
         twins += ts['W'][0]
         tloss += ts['L'][0]
         
@@ -100,7 +102,7 @@ def create_graph_data(vids, jids, tids):
     
     for id in vids:
         
-        data = team.TeamGameLogs(id).info()[['GAME_DATE', 'W', 'L']]
+        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
         data.index = pd.to_datetime(data['GAME_DATE'])
         data = data.sort_index()
         start_dates = data.index[0:-1]
@@ -120,7 +122,7 @@ def create_graph_data(vids, jids, tids):
     
     for id in jids:
         
-        data = team.TeamGameLogs(id).info()[['GAME_DATE', 'W', 'L']]
+        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
         data.index = pd.to_datetime(data['GAME_DATE'])
         data = data.sort_index()
         start_dates = data.index[0:-1]
@@ -141,7 +143,7 @@ def create_graph_data(vids, jids, tids):
             
     for id in tids:
         
-        data = team.TeamGameLogs(id).info()[['GAME_DATE', 'W', 'L']]
+        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
         data.index = pd.to_datetime(data['GAME_DATE'])
         data = data.sort_index()
         start_dates = data.index[0:-1]
@@ -198,7 +200,7 @@ def make_html(current_totals):
 if __name__ == '__main__':
     
     # Upload each of our teams from separate text files
-    vicki = np.loadtxt('vicki_teams16-17.txt', dtype=str)
+    vicki = np.loadtxt('vicki_teams16-17.txt', dtype=str, delimiter='\t')
     johnny = np.loadtxt('johnny_teams16-17.txt', dtype=str)
     taro = np.loadtxt('taro_teams16-17.txt', dtype=str, delimiter='\t')
     
