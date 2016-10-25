@@ -129,4 +129,3 @@ def parser(alt=False):
     
 if __name__ == '__main__':
     parser()
-    
