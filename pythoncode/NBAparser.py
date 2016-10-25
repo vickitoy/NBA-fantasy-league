@@ -1,46 +1,64 @@
-#!/Users/ttshimiz/anaconda/bin/python
-
+import urllib2
+import json
 import pandas as pd
 import datetime as dt
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sn
-from nba_py import team
 
-SEASON = '2016-17'
-START_DATE = '10/25/2016'
+def getpage(htmlpage):
 
-def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
+    opener = urllib2.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+    response = opener.open(htmlpage)
+    #response = urllib2.urlopen(htmlpage)
+    html = response.read()
+    response.close()
+    return html
 
+
+def makejson(json_text):
+
+    vicki  = ['Cavaliers', 'Clippers', 'Blazers', 'Grizzlies', 'Pacers',
+                'Mavericks', 'Bulls', 'Heat', 'Suns', '76ers']
+    johnny = ['Warriors', 'Celtics', 'Jazz', 'Hawks', 'Pistons',
+               'Timberwolves', 'Bucks', 'Magic', 'Nuggets', 'Lakers']
+    taro   = ['Spurs', 'Raptors', 'Rockets', 'Hornets','Thunder',
+                'Wizards', 'Pelicans', 'Knicks', 'Kings', 'Nets']
+    
+    data = json.loads(json_text)
+    
     vwins = 0; vloss = 0
     jwins = 0; jloss = 0
     twins = 0; tloss = 0
+    for teamdata in data['resultSets'][0]['rowSet']:
+        teamname = teamdata[1]
+        teamwins = teamdata[3]
+        teamloss = teamdata[4]
+        
+        if any(s in teamname for s in vicki):
+            vwins += teamwins
+            vloss += teamloss
+        if any(s in teamname for s in johnny):
+            jwins += teamwins
+            jloss += teamloss
+        if any(s in teamname for s in taro):
+            twins += teamwins
+            tloss += teamloss
     
-    for id in vicki_ids:
-        
-        ts = team.TeamSummary(id, season=SEASON).info()
-        vwins += ts['W'][0]
-        vloss += ts['L'][0]
+    vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
     
-    for id in johnny_ids:
-        
-        ts = team.TeamSummary(id, season=SEASON).info()
-        jwins += ts['W'][0]
-        jloss += ts['L'][0]
-        
-    for id in taro_ids:
-        
-        ts = team.TeamSummary(id, season=SEASON).info()
-        twins += ts['W'][0]
-        tloss += ts['L'][0]
-        
-    return [[vwins, vloss], [jwins, jloss], [twins, tloss]]
-     
-   
+    #print teamname, teamwins,teamloss
+    #print 'Vicki ', vwins, vloss, vwins_remain
+    #print 'Johnny ', jwins, jloss, jwins_remain
+    #print 'Taro ', twins, tloss, twins_remain
+
+    return [[vwins,vloss,vwins_remain], 
+            [jwins,jloss,jwins_remain],
+            [twins,tloss,twins_remain]]
+ 
 def calc_remaining_wins(vicki, johnny, taro):
 
     # Upload the current schedule
-    nba_sched = pd.read_csv('2016_schedule.txt', index_col=0)
+    nba_sched = pd.read_csv('/Users/vickitoy/Sideprojects/NBA-fantasy-league/pythoncode/2016_schedule.txt', index_col=0)
     
     # Convert the date to a Timestamp
     nba_sched.index = pd.to_datetime(nba_sched.index)
@@ -85,170 +103,29 @@ def calc_remaining_wins(vicki, johnny, taro):
                     twins_not_guaranteed += 1
     
     return vwins_remain, jwins_remain, twins_remain
-    
-def create_graph_data(vids, jids, tids):
-
-    today = dt.date.today()
-    str_today = '%i/%i/%i' % (today.month, today.day, today.year)
-    sched_dates = pd.date_range(start=START_DATE, end=str_today)
-    
-    df = pd.DataFrame(index=sched_dates, columns=['vicki_wins', 'vicki_losses', 
-                                                  'johnny_wins', 'johnny_losses',
-                                                  'taro_wins', 'taro_losses'])
-    df['vicki_wins'] = 0
-    df['johnny_wins'] = 0
-    df['taro_wins'] = 0
-    df['vicki_losses'] = 0
-    df['johnny_losses'] = 0
-    df['taro_losses'] = 0
-    
-    for id in vids:
         
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
-        if not data.empty:
-			data.index = pd.to_datetime(data['GAME_DATE'])
-			data = data.sort_index()
-			start_dates = data.index[0:-1]
-			end_dates = data.index[1:]
-			ed = end_dates.tolist()
-			ed[-1] = sched_dates[-1]
-			end_dates = ed
-		
-			for i,s in enumerate(start_dates):
-				if i != (len(start_dates)-1):
-					e = end_dates[i] - pd.DateOffset()
-				else:
-					e = end_dates[i]
-
-				df.loc[s:e, 'vicki_wins'] = df.loc[s:e, 'vicki_wins'] + data.loc[s, 'W']
-				df.loc[s:e, 'vicki_losses'] = df.loc[s:e, 'vicki_losses'] + data.loc[s, 'L']
     
-    for id in jids:
-        
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
-        if not data.empty:
-			data.index = pd.to_datetime(data['GAME_DATE'])
-			data = data.sort_index()
-			start_dates = data.index[0:-1]
-			end_dates = data.index[1:]
-			ed = end_dates.tolist()
-			ed[-1] = sched_dates[-1]
-			end_dates = ed
-		
-			for i,s in enumerate(start_dates):
-				if i != (len(start_dates)-1):
-					e = end_dates[i] - pd.DateOffset()
-				else:
-					e = end_dates[i]
+def parser(alt=False):
+    website = 'http://stats.nba.com/stats/leaguedashteamstats?Season=2016' +\
+                '-17&AllStarSeason&SeasonType=Regular%20Season&LeagueID=00&' +\
+                'MeasureType=Base&PerMode=PerGame&PlusMinus=N&PaceAdjust=N&' +\
+                'Rank=N&Outcome&Location&Month=0&SeasonSegment&DateFrom&Date' +\
+                'To&OpponentTeamID=0&VsConference&VsDivision&GameSegment&' +\
+                'Period=0&LastNGames=0&GameScope&PlayerExperience&Player' +\
+                'Position&StarterBench'
+                            
+    #print website
+    json_text = getpage(website)
+    [[vwins,vloss,vwins_remain], 
+     [jwins,jloss,jwins_remain],
+     [twins,tloss,twins_remain]] = makejson(json_text)
 
-				df.loc[s:e, 'johnny_wins'] = df.loc[s:e, 'johnny_wins'] + data.loc[s, 'W']
-				df.loc[s:e, 'johnny_losses'] = df.loc[s:e, 'johnny_losses'] + data.loc[s, 'L']
-                       
-    for id in tids:
-        
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
-        if not data.empty:
-			data.index = pd.to_datetime(data['GAME_DATE'])
-			data = data.sort_index()
-			start_dates = data.index[0:-1]
-			end_dates = data.index[1:]
-			ed = end_dates.tolist()
-			ed[-1] = sched_dates[-1]
-			end_dates = ed
-		
-			for i,s in enumerate(start_dates):
-				if i != (len(start_dates)-1):
-					e = end_dates[i] - pd.DateOffset()
-				else:
-					e = end_dates[i]
-				df.loc[s:e, 'taro_wins'] = df.loc[s:e, 'taro_wins'] + data.loc[s, 'W']
-				df.loc[s:e, 'taro_losses'] = df.loc[s:e, 'taro_losses'] + data.loc[s, 'L'] 
-				
-	df['taro_winperc'] = df['taro_wins']/(df['taro_wins']+df['taro_losses'])
-	df['vicki_winperc'] = df['vicki_wins']/(df['vicki_wins']+df['vicki_losses'])
-	df['johnny_winperc'] = df['johnny_wins']/(df['johnny_wins']+df['johnny_losses'])
-	df.fillna(value=0, inplace=True)
+   
+    out = {'vwins':vwins,'vloss':vloss, 'vremain':vwins_remain,
+          'jwins':jwins,'jloss':jloss, 'jremain':jwins_remain,
+          'twins':twins,'tloss':tloss, 'tremain':twins_remain } 
     
-    return df       
- 
-
-def plot_graph(wins_losses): 
-     # Plot winning percentage as a function of time
-    sn.set(color_codes=True)
-    fig = plt.figure(figsize=(12, 4))
-    ax = fig.add_subplot(111)
-    ax.plot(wins_losses['vicki_winperc'], 'r-', label='Vicki')
-    ax.plot(wins_losses['taro_winperc'], 'b-', label='Taro')
-    ax.plot(wins_losses['johnny_winperc'], 'g-', label='Johnny')
-    ax.set_xlabel('Date', fontsize=14)
-    ax.set_ylabel('Winning Percentage')
-    ax.legend(loc='upper right')
-    fig.savefig('win_percent.png', bbox_inches='tight')
-    plt.close(fig)
+    print json.dumps(out, sort_keys=True)   
     
-    return 
-    
-def make_html(current_totals):
-
-    with open('../template.html', 'r') as ftemp:
-        temp = ftemp.read()
-    
-    current_totals = current_totals.sort_values('wins', ascending=False)
-    current_winner = current_totals.index[0]    
-    updated = temp % (current_winner,
-                      current_totals.loc['Johnny']['wins'], current_totals.loc['Johnny']['losses'], current_totals.loc['Johnny']['remaining'],
-                      current_totals.loc['Taro']['wins'], current_totals.loc['Taro']['losses'], current_totals.loc['Taro']['remaining'],
-                      current_totals.loc['Vicki']['wins'], current_totals.loc['Vicki']['losses'], current_totals.loc['Vicki']['remaining'])
-                      
-    with open('../index.html', 'w') as findex:
-        findex.write(updated)
-        
-    return
-
-
 if __name__ == '__main__':
-    
-    # Upload each of our teams from separate text files
-    vicki = np.loadtxt('vicki_teams16-17.txt', dtype=str, delimiter='\t')
-    johnny = np.loadtxt('johnny_teams16-17.txt', dtype=str)
-    taro = np.loadtxt('taro_teams16-17.txt', dtype=str, delimiter='\t')
-    
-    vicki_ids = []
-    johnny_ids = []
-    taro_ids = []
-    
-    # Get the IDs for each team
-    for t in team.TEAMS.keys():
-        
-        tm = team.TEAMS[t]
-        
-        if np.any(vicki == tm['name']):
-            vicki_ids.append(tm['id'])
-        elif np.any(johnny == tm['name']):
-            johnny_ids.append(tm['id'])
-        elif np.any(taro == tm['name']):
-            taro_ids.append(tm['id'])
-        else:
-            raise ValueError('{0} not on any team!'.format(tm['name']))
-    
-    # Calculate total wins and losses to date
-    vrecord, jrecord, trecord = calc_current_wins(vicki_ids, johnny_ids, taro_ids)
-    vwins = vrecord[0]; vloss = vrecord[1]
-    jwins = jrecord[0]; jloss = jrecord[1]
-    twins = trecord[0]; tloss = trecord[1]
-    
-    # Calculate maximum remaining wins left
-    vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
-    
-    # Calculate each W-L record as a function of time for graph
-    wins_losses = create_graph_data(vicki_ids, johnny_ids, taro_ids)
-    
-    # Plot the graph and save as image
-    plot_graph(wins_losses)
-    
-    # Generate updated HTML file
-    current_totals = pd.DataFrame(index=['Vicki', 'Johnny', 'Taro'], columns=['wins', 'losses', 'remaining'])
-    current_totals.loc['Vicki'] = [vwins, vloss, vwins_remain]
-    current_totals.loc['Johnny'] = [jwins, jloss, jwins_remain]
-    current_totals.loc['Taro'] = [twins, tloss, twins_remain]
-    make_html(current_totals)
+    parser()
