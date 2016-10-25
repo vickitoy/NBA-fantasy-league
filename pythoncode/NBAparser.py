@@ -86,7 +86,6 @@ def calc_remaining_wins(vicki, johnny, taro):
     
     return vwins_remain, jwins_remain, twins_remain
     
-
 def create_graph_data(vids, jids, tids):
 
     today = dt.date.today()
