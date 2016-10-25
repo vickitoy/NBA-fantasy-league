@@ -69,6 +69,17 @@ def calc_remaining_wins(vicki, johnny, taro):
         for i in range(len(home_teams)):
             ht = home_teams[i].split()[-1]
             at = away_teams[i].split()[-1]
+           
+            if ht == 'Blazers':
+                ht = 'Trail Blazers'
+            if at == 'Blazers':
+                at = 'Trail Blazers'
+                
+            if ht == '76ers':
+                ht = 'Sixers'
+            if at == '76ers':
+                at = 'Sixers'
+                
             if (any(ht == np.array(vicki)) | any(at == np.array(vicki))):
                 vwins_remain += 1
                 if not (any(ht == np.array(vicki)) & any(at == np.array(vicki))):
