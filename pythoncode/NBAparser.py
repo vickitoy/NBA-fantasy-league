@@ -58,7 +58,7 @@ def makejson(json_text):
 def calc_remaining_wins(vicki, johnny, taro):
 
     # Upload the current schedule
-    nba_sched = pd.read_csv('/Users/vickitoy/Sideprojects/NBA-fantasy-league/pythoncode/2015_schedule.txt', index_col=0)
+    nba_sched = pd.read_csv('/Users/vickitoy/Sideprojects/NBA-fantasy-league/pythoncode/2016_schedule.txt', index_col=0)
     
     # Convert the date to a Timestamp
     nba_sched.index = pd.to_datetime(nba_sched.index)
