@@ -9,7 +9,8 @@ from nba_py import team
 
 SEASON = '2016-17'
 START_DATE = '10/25/2016'
-TODAY = today = dt.date.today()
+today = dt.datetime.now() - dt.timedelta(hours=6)
+TODAY = today.date()
 STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
 
 def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
@@ -218,14 +219,12 @@ def create_graph_data(vids, jids, tids):
 def plot_graph(wins_losses): 
      # Plot winning percentage as a function of time
     sn.set(color_codes=True)
-    fig = plt.figure(figsize=(12, 4))
+    fig = plt.figure(figsize=(6.5, 3))
     ax = fig.add_subplot(111)
-    ax.plot(wins_losses['vicki_winperc'], 'r-', label='Vicki')
-    ax.plot(wins_losses['taro_winperc'], 'b-', label='Taro')
-    ax.plot(wins_losses['johnny_winperc'], 'g-', label='Johnny')
-    ax.set_xlabel('Date', fontsize=14)
-    ax.set_ylabel('Winning Percentage')
-    ax.legend(loc='upper right')
+    ax = wins_losses.plot(y=['vicki_winperc', 'taro_winperc', 'johnny_winperc'], ax=ax)
+    ax.legend(['Vicki', 'Taro', 'Johnny'])    
+    #ax.set_xlabel('Date', fontsize=12)
+    ax.set_ylabel('Winning Percentage', fontsize=12)
     fig.savefig('win_percent.png', bbox_inches='tight')
     plt.close(fig)
     
