@@ -147,6 +147,10 @@ def create_graph_data(vids, jids, tids):
     df['johnny_winperc'] = df['johnny_wins']/(df['johnny_wins']+df['johnny_losses'])
     df.fillna(value=0, inplace=True)
     
+    df['taro_diff'] = df['taro_wins'] - df['taro_losses']
+    df['vicki_diff'] = df['vicki_wins'] - df['vicki_losses']
+    df['johnny_diff'] = df['johnny_wins'] - df['johnny_losses']
+    
     return df       
  
 
@@ -155,10 +159,12 @@ def plot_graph(wins_losses):
     sn.set(color_codes=True)
     fig = plt.figure(figsize=(6.5, 3))
     ax = fig.add_subplot(111)
-    ax = wins_losses.plot(y=['vicki_winperc', 'taro_winperc', 'johnny_winperc'], ax=ax)
+    #ax = wins_losses.plot(y=['vicki_winperc', 'taro_winperc', 'johnny_winperc'], ax=ax)
+    ax = wins_losses.plot(y=['vicki_diff', 'taro_diff', 'johnny_diff'], ax=ax)
     ax.legend(['Vicki', 'Taro', 'Johnny'])    
     #ax.set_xlabel('Date', fontsize=12)
-    ax.set_ylabel('Winning Percentage', fontsize=12)
+    #ax.set_ylabel('Winning Percentage', fontsize=12)
+    ax.set_ylabel('Wins - Losses', fontsize=12)
     fig.savefig('win_percent.png', bbox_inches='tight')
     plt.close(fig)
     
