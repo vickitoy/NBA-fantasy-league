@@ -115,103 +115,37 @@ def create_graph_data(vids, jids, tids):
     df['taro_losses'] = 0
     
     for id in vids:
-        
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
+        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
+        print data
         if not data.empty:
             data.index = pd.to_datetime(data['GAME_DATE'])
             data = data.sort_index()
+            for d in df.index:
+                df.loc[d, 'vicki_wins'] = df.loc[d, 'vicki_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
+                df.loc[d, 'vicki_losses'] = df.loc[d, 'vicki_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
 
-            if len(data) > 1:
-
-                start_dates = data.index[0:-1]
-                end_dates = data.index[1:]
-                ed = end_dates.tolist()
-                ed[-1] = sched_dates[-1]
-                end_dates = ed
-            
-        
-                for i,s in enumerate(start_dates):
-                    if i != (len(start_dates)-1):
-                        e = end_dates[i] - pd.DateOffset()
-                    else:
-                        e = end_dates[i]
-                    
-                    df.loc[s:e, 'vicki_wins'] = df.loc[s:e, 'vicki_wins'] + data.loc[s, 'W']
-                    df.loc[s:e, 'vicki_losses'] = df.loc[s:e, 'vicki_losses'] + data.loc[s, 'L']
-
-            else:
-                
-                df.loc[data.index, 'vicki_wins'] = df.loc[data.index, 'vicki_wins'] + data['W']
-                df.loc[data.index, 'vicki_losses'] = df.loc[data.index, 'vicki_losses'] + data['L']
-    
     for id in jids:
-        
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
+        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
         if not data.empty:
             data.index = pd.to_datetime(data['GAME_DATE'])
             data = data.sort_index()
-            if len(data) > 1:
-                start_dates = data.index[0:-1]
-                end_dates = data.index[1:]
-                ed = end_dates.tolist()
-                ed[-1] = sched_dates[-1]
-                end_dates = ed
-            
-        
-                for i,s in enumerate(start_dates):
-                    if i != (len(start_dates)-1):
-                        e = end_dates[i] - pd.DateOffset()
-                    else:
-                        e = end_dates[i]
-                    
-                    df.loc[s:e, 'johnny_wins'] = df.loc[s:e, 'johnny_wins'] + data.loc[s, 'W']
-                    df.loc[s:e, 'johnny_losses'] = df.loc[s:e, 'johnny_losses'] + data.loc[s, 'L']
+            for d in df.index:
+                df.loc[d, 'johnny_wins'] = df.loc[d, 'johnny_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
+                df.loc[d, 'johnny_losses'] = df.loc[d, 'johnny_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
 
-            else:
-                
-                df.loc[data.index, 'johnny_wins'] = df.loc[data.index, 'johnny_wins'] + data['W']
-                df.loc[data.index, 'johnny_losses'] = df.loc[data.index, 'johnny_losses'] + data['L']                       
     for id in tids:
-        
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'W', 'L']]
+        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
         if not data.empty:
             data.index = pd.to_datetime(data['GAME_DATE'])
             data = data.sort_index()
-            if len(data) > 1:
-                start_dates = data.index[0:-1]
-                end_dates = data.index[1:]
-                ed = end_dates.tolist()
-                ed[-1] = sched_dates[-1]
-                end_dates = ed
-            
-        
-                for i,s in enumerate(start_dates):
-                    if i != (len(start_dates)-1):
-                        e = end_dates[i] - pd.DateOffset()
-                    else:
-                        e = end_dates[i]
-                    
-                    df.loc[s:e, 'taro_wins'] = df.loc[s:e, 'taro_wins'] + data.loc[s, 'W']
-                    df.loc[s:e, 'taro_losses'] = df.loc[s:e, 'taro_losses'] + data.loc[s, 'L']
-
-            else:
-                
-                df.loc[data.index, 'taro_wins'] = df.loc[data.index, 'taro_wins'] + data['W']
-                df.loc[data.index, 'taro_losses'] = df.loc[data.index, 'taro_losses'] + data['L']
+            for d in df.index:
+                df.loc[d, 'taro_wins'] = df.loc[d, 'taro_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
+                df.loc[d, 'taro_losses'] = df.loc[d, 'taro_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
                 
     df['taro_winperc'] = df['taro_wins']/(df['taro_wins']+df['taro_losses'])
     df['vicki_winperc'] = df['vicki_wins']/(df['vicki_wins']+df['vicki_losses'])
     df['johnny_winperc'] = df['johnny_wins']/(df['johnny_wins']+df['johnny_losses'])
     df.fillna(value=0, inplace=True)
-    
-    if df.loc[df.index[-1],'taro_winperc'] == 0:
-        df.loc[df.index[-1],'taro_winperc'] = df.loc[df.index[-2],'taro_winperc']
-        
-    if df.loc[df.index[-1],'vicki_winperc'] == 0:
-        df.loc[df.index[-1],'vicki_winperc'] = df.loc[df.index[-2],'vicki_winperc']
-        
-    if df.loc[df.index[-1],'johnny_winperc'] == 0:
-        df.loc[df.index[-1],'johnny_winperc'] = df.loc[df.index[-2],'johnny_winperc']
     
     return df       
  
