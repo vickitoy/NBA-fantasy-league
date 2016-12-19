@@ -160,7 +160,7 @@ def plot_graph(wins_losses):
     ax = fig.add_subplot(111)
     #ax = wins_losses.plot(y=['vicki_winperc', 'taro_winperc', 'johnny_winperc'], ax=ax)
     ax = wins_losses.plot(y=['vicki_diff', 'taro_diff', 'johnny_diff'], ax=ax)
-    ax.legend(['Vicki', 'Taro', 'Johnny'])    
+    ax.legend(['Vicki', 'Taro', 'Johnny'], loc='lower left')    
     #ax.set_xlabel('Date', fontsize=12)
     #ax.set_ylabel('Winning Percentage', fontsize=12)
     ax.set_ylabel('Wins - Losses', fontsize=12)
