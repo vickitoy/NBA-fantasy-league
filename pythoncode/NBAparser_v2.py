@@ -169,14 +169,15 @@ def plot_graph(wins_losses):
     
     return 
     
-def make_html(current_totals):
+def make_html(current_totals, team_pickorder):
 
     with open('../template.html', 'r') as ftemp:
         temp = ftemp.read()
     
     current_totals = current_totals.sort_values('wins', ascending=False)
-    current_winner = current_totals.index[0]    
-    updated = temp % (STR_TODAY, current_winner,
+    current_winner = current_totals.index[0] 
+    
+    html_string = [STR_TODAY, current_winner,
                       current_totals.loc['Johnny']['wins'],
                       current_totals.loc['Johnny']['losses'],
                       current_totals.loc['Johnny']['remaining'],
@@ -185,7 +186,11 @@ def make_html(current_totals):
                       current_totals.loc['Taro']['remaining'],
                       current_totals.loc['Vicki']['wins'],
                       current_totals.loc['Vicki']['losses'],
-                      current_totals.loc['Vicki']['remaining'])
+                      current_totals.loc['Vicki']['remaining']] + team_pickorder
+    
+                      
+    print html_string
+    updated = temp % tuple(html_string)
                       
     with open('../index.html', 'w') as findex:
         findex.write(updated)
@@ -195,11 +200,22 @@ def make_html(current_totals):
 
 if __name__ == '__main__':
     
+    
     # Upload each of our teams from separate text files
     vicki = np.loadtxt('vicki_teams16-17.txt', dtype=str, delimiter='\t')
     johnny = np.loadtxt('johnny_teams16-17.txt', dtype=str)
     taro = np.loadtxt('taro_teams16-17.txt', dtype=str, delimiter='\t')
     
+    # Creates values for table of picks based on pick order
+    person_dict = {'vicki': vicki, 'johnny': johnny, 'taro': taro}
+    pick_order = np.loadtxt('pickorder.txt', dtype=str, delimiter='\t')
+
+    team_pickorder = [pick_order[0], pick_order[1], pick_order[2]]
+    for i in range(10):
+        team_pickorder += [person_dict[pick_order[0]][i], 
+                            person_dict[pick_order[1]][i], 
+                            person_dict[pick_order[2]][i]]
+                            
     vicki_ids = []
     johnny_ids = []
     taro_ids = []
@@ -238,4 +254,4 @@ if __name__ == '__main__':
     current_totals.loc['Vicki'] = [vwins, vloss, vwins_remain]
     current_totals.loc['Johnny'] = [jwins, jloss, jwins_remain]
     current_totals.loc['Taro'] = [twins, tloss, twins_remain]
-    make_html(current_totals)
+    make_html(current_totals, team_pickorder)
