@@ -196,6 +196,35 @@ def make_html(current_totals, team_pickorder):
         findex.write(updated)
         
     return
+    
+def make_bettor_html(current_totals, ids):
+    
+    current_totals = current_totals.sort_values('wins', ascending=False)
+    current_winner = current_totals.index[0] 
+    
+    for bettor in ['Johnny', 'Taro', 'Vicki']:
+        with open('../template_bettor.html', 'r') as ftemp:
+            temp = ftemp.read()   
+
+        bettor_ids = ids[bettor]
+        bettor_records = []
+        for id in bettor_ids:
+            t = team.TeamSummary(id, season=SEASON).info()
+            bettor_records += [t['TEAM_NAME'][0], t['W'][0], t['L'][0], 82-t['W'][0]-t['L'][0]]
+
+        html_string = [bettor,
+                      current_totals.loc[bettor]['wins'],
+                      current_totals.loc[bettor]['losses'],
+                      current_totals.loc[bettor]['remaining']] + bettor_records
+    
+                      
+        print html_string
+        updated = temp % tuple(html_string)
+                      
+        with open('../'+bettor+'.html', 'w') as findex:
+            findex.write(updated)
+        
+    return
 
 
 if __name__ == '__main__':
@@ -234,6 +263,8 @@ if __name__ == '__main__':
         else:
             raise ValueError('{0} not on any team!'.format(tm['name']))
     
+    ids = {'Vicki': vicki_ids, 'Johnny':johnny_ids, 'Taro':taro_ids}
+    
     # Calculate total wins and losses to date
     vrecord, jrecord, trecord = calc_current_wins(vicki_ids, johnny_ids, taro_ids)
     vwins = vrecord[0]; vloss = vrecord[1]
@@ -255,3 +286,4 @@ if __name__ == '__main__':
     current_totals.loc['Johnny'] = [jwins, jloss, jwins_remain]
     current_totals.loc['Taro'] = [twins, tloss, twins_remain]
     make_html(current_totals, team_pickorder)
+    make_bettor_html(current_totals,ids)
