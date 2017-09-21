@@ -6,41 +6,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
 from nba_py import team
+import time
 
 SEASON = '2016-17'
 START_DATE = '10/25/2016'
 today = dt.datetime.now() - dt.timedelta(hours=6)
 TODAY = today.date()
-STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
+#STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
+STR_TODAY = '10/26/2016'
 
-def calc_current_wins(vicki_ids, johnny_ids, taro_ids):
+def calc_current_wins(person_dict):
 
-    vwins = 0; vloss = 0
-    jwins = 0; jloss = 0
-    twins = 0; tloss = 0
-    
-    for id in vicki_ids:
-        
-        ts = team.TeamSummary(id, season=SEASON).info()
-        vwins += ts['W'][0]
-        vloss += ts['L'][0]
-    
-    for id in johnny_ids:
-        
-        ts = team.TeamSummary(id, season=SEASON).info()
-        jwins += ts['W'][0]
-        jloss += ts['L'][0]
-        
-    for id in taro_ids:
-        
-        ts = team.TeamSummary(id, season=SEASON).info()
-        twins += ts['W'][0]
-        tloss += ts['L'][0]
-        
-    return [[vwins, vloss], [jwins, jloss], [twins, tloss]]
+    win_loss = []
+    order = []
+    for person in person_dict:
+        iwin_loss = [0,0]
+        print person
+        for bteam in person_dict[person]:
+            print bteam
+            ts = team.TeamSummary(bteam[2], season=SEASON).info()
+            
+            iwin_loss[0] += ts['W'][0]
+            iwin_loss[1] += ts['L'][0]
+            time.sleep(1)
+        win_loss.append(iwin_loss)
+        order.append(person)
+    return win_loss, order
      
    
-def calc_remaining_wins(vicki, johnny, taro):
+def calc_remaining_wins(team_bettor, bettor_remaining):
 
     # Upload the current schedule
     nba_sched = pd.read_csv('2016_schedule.txt', index_col=0)
@@ -57,22 +51,17 @@ def calc_remaining_wins(vicki, johnny, taro):
     
     # Loop through the remaining games. Assume exactly 1 win for every game a person has
     # a team playing in. If they have 2 teams playing each other, that only counts a 1 win
-    vwins_remain = 0
-    jwins_remain = 0
-    twins_remain = 0
-    vwins_not_guaranteed = 0
-    jwins_not_guaranteed = 0
-    twins_not_guaranteed = 0
     
     for game in np.unique(nba_sched_remain.index):
     
         home_teams = nba_sched_remain.loc[game, 'Home/Neutral']
         away_teams = nba_sched_remain.loc[game, 'Visitor/Neutral']
+
         
         for i in range(len(home_teams)):
             ht = home_teams[i].split()[-1]
             at = away_teams[i].split()[-1]
-           
+
             if ht == 'Blazers':
                 ht = 'Trail Blazers'
             if at == 'Blazers':
@@ -82,94 +71,59 @@ def calc_remaining_wins(vicki, johnny, taro):
                 ht = 'Sixers'
             if at == '76ers':
                 at = 'Sixers'
-                
-            if (any(ht == np.array(vicki)) | any(at == np.array(vicki))):
-                vwins_remain += 1
-                if not (any(ht == np.array(vicki)) & any(at == np.array(vicki))):
-                    vwins_not_guaranteed += 1
-        
-            if (any(ht == np.array(johnny)) | any(at == np.array(johnny))):
-                jwins_remain += 1
-                if not (any(ht == np.array(johnny)) & any(at == np.array(johnny))):
-                    jwins_not_guaranteed += 1
 
-            if (any(ht == np.array(taro)) | any(at == np.array(taro))):
-                twins_remain += 1
-                if not (any(ht == np.array(taro)) & any(at == np.array(taro))):
-                    twins_not_guaranteed += 1
+            if team_bettor[ht] == team_bettor[at]:
+                bettor_remaining[team_bettor[ht]] += 1
+            else:
+                bettor_remaining[team_bettor[ht]] += 1
+                bettor_remaining[team_bettor[at]] += 1
     
-    return vwins_remain, jwins_remain, twins_remain
+    return bettor_remaining
     
-def create_graph_data(vids, jids, tids):
+def create_graph_data(person_dict):
 
     sched_dates = pd.date_range(start=START_DATE, end=STR_TODAY)
     
-    df = pd.DataFrame(index=sched_dates, columns=['vicki_wins', 'vicki_losses', 
-                                                  'johnny_wins', 'johnny_losses',
-                                                  'taro_wins', 'taro_losses'])
-    df['vicki_wins'] = 0
-    df['johnny_wins'] = 0
-    df['taro_wins'] = 0
-    df['vicki_losses'] = 0
-    df['johnny_losses'] = 0
-    df['taro_losses'] = 0
+    column_names = [i+'_win' for i in person_dict.keys()] + [i+'_losses' for i in person_dict.keys()]
     
-    for id in vids:
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
-        if not data.empty:
-            data.index = pd.to_datetime(data['GAME_DATE'])
-            data = data.sort_index()
-            for d in df.index:
-                df.loc[d, 'vicki_wins'] = df.loc[d, 'vicki_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
-                df.loc[d, 'vicki_losses'] = df.loc[d, 'vicki_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
-
-    for id in jids:
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
-        if not data.empty:
-            data.index = pd.to_datetime(data['GAME_DATE'])
-            data = data.sort_index()
-            for d in df.index:
-                df.loc[d, 'johnny_wins'] = df.loc[d, 'johnny_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
-                df.loc[d, 'johnny_losses'] = df.loc[d, 'johnny_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
-
-    for id in tids:
-        data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
-        if not data.empty:
-            data.index = pd.to_datetime(data['GAME_DATE'])
-            data = data.sort_index()
-            for d in df.index:
-                df.loc[d, 'taro_wins'] = df.loc[d, 'taro_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
-                df.loc[d, 'taro_losses'] = df.loc[d, 'taro_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
+    df = pd.DataFrame(index=sched_dates, columns=column_names)
+    
+    for bettor in person_dict:
+    
+        for tup in person_dict[bettor]:
+            id = tup[2]
+            data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
+            df[bettor+'_wins'] = 0
+            df[bettor+'_losses'] = 0
+            if not data.empty:
+                data.index = pd.to_datetime(data['GAME_DATE'])
+                data = data.sort_index()
+                for d in df.index:
+                    df.loc[d, bettor+'_wins'] = df.loc[d, bettor+'_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
+                    df.loc[d, bettor+'_losses'] = df.loc[d, bettor+'_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
+            time.sleep(1)
+        df[bettor+'_winperc'] = df[bettor+'_wins']/(df[bettor+'_wins']+df[bettor+'_losses'])
                 
-    df['taro_winperc'] = df['taro_wins']/(df['taro_wins']+df['taro_losses'])
-    df['vicki_winperc'] = df['vicki_wins']/(df['vicki_wins']+df['vicki_losses'])
-    df['johnny_winperc'] = df['johnny_wins']/(df['johnny_wins']+df['johnny_losses'])
-    df.fillna(value=0, inplace=True)
-    
-    df['taro_diff'] = df['taro_wins'] - df['taro_losses']
-    df['vicki_diff'] = df['vicki_wins'] - df['vicki_losses']
-    df['johnny_diff'] = df['johnny_wins'] - df['johnny_losses']
+        df.fillna(value=0, inplace=True)
+        df[bettor+'_diff'] = df[bettor+'_wins'] - df[bettor+'_losses']
     
     return df       
  
 
-def plot_graph(wins_losses): 
+def plot_graph(wins_losses, pick_order): 
      # Plot winning percentage as a function of time
     sn.set(color_codes=True)
     fig = plt.figure(figsize=(6.5, 3))
     ax = fig.add_subplot(111)
-    #ax = wins_losses.plot(y=['vicki_winperc', 'taro_winperc', 'johnny_winperc'], ax=ax)
-    ax = wins_losses.plot(y=['vicki_diff', 'taro_diff', 'johnny_diff'], ax=ax)
-    ax.legend(['Vicki', 'Taro', 'Johnny'], loc='lower left')    
-    #ax.set_xlabel('Date', fontsize=12)
-    #ax.set_ylabel('Winning Percentage', fontsize=12)
+    ax = wins_losses.plot(y=[pick_order[0]+'_diff', pick_order[1]+'_diff', pick_order[2]+'_diff'], ax=ax)
+    ax.legend(pick_order, loc='lower left')    
     ax.set_ylabel('Wins - Losses', fontsize=12)
     fig.savefig('win_percent.png', bbox_inches='tight')
     plt.close(fig)
     
     return 
     
-def make_html(current_totals, team_pickorder):
+def make_html(current_totals, order, team_pickorder):
 
     with open('../template.html', 'r') as ftemp:
         temp = ftemp.read()
@@ -177,18 +131,15 @@ def make_html(current_totals, team_pickorder):
     current_totals = current_totals.sort_values('wins', ascending=False)
     current_winner = current_totals.index[0] 
     
-    html_string = [STR_TODAY, current_winner,
-                      current_totals.loc['Johnny']['wins'],
-                      current_totals.loc['Johnny']['losses'],
-                      current_totals.loc['Johnny']['remaining'],
-                      current_totals.loc['Taro']['wins'],
-                      current_totals.loc['Taro']['losses'],
-                      current_totals.loc['Taro']['remaining'],
-                      current_totals.loc['Vicki']['wins'],
-                      current_totals.loc['Vicki']['losses'],
-                      current_totals.loc['Vicki']['remaining']] + team_pickorder
+    html_string = [STR_TODAY, current_winner]
     
-                      
+    for bettor in order:
+        html_string += [bettor,bettor, current_totals.loc[bettor]['wins'],
+                        current_totals.loc[bettor]['losses'],
+                        current_totals.loc[bettor]['remaining']]
+
+    html_string += team_pickorder
+              
     print html_string
     updated = temp % tuple(html_string)
                       
@@ -197,93 +148,74 @@ def make_html(current_totals, team_pickorder):
         
     return
     
-def make_bettor_html(current_totals, ids):
+def make_bettor_html(current_totals, person_dict):
     
     current_totals = current_totals.sort_values('wins', ascending=False)
     current_winner = current_totals.index[0] 
     
-    for bettor in ['Johnny', 'Taro', 'Vicki']:
+    for person in person_dict:
         with open('../template_bettor.html', 'r') as ftemp:
             temp = ftemp.read()   
 
-        bettor_ids = ids[bettor]
         bettor_records = []
-        for id in bettor_ids:
-            t = team.TeamSummary(id, season=SEASON).info()
+        for bteam in person_dict[person]:
+            t = team.TeamSummary(bteam[2], season=SEASON).info()
             bettor_records += [t['TEAM_NAME'][0], t['W'][0], t['L'][0], 82-t['W'][0]-t['L'][0]]
+            time.sleep(1)
 
-        html_string = [bettor,
-                      current_totals.loc[bettor]['wins'],
-                      current_totals.loc[bettor]['losses'],
-                      current_totals.loc[bettor]['remaining']] + bettor_records
+        html_string = [person,
+                      current_totals.loc[person]['wins'],
+                      current_totals.loc[person]['losses'],
+                      current_totals.loc[person]['remaining']] + bettor_records
     
                       
         print html_string
         updated = temp % tuple(html_string)
                       
-        with open('../'+bettor+'.html', 'w') as findex:
+        with open('../'+person+'.html', 'w') as findex:
             findex.write(updated)
-        
+     
     return
 
 
 if __name__ == '__main__':
     
-    
-    # Upload each of our teams from separate text files
-    vicki = np.loadtxt('vicki_teams16-17.txt', dtype=str, delimiter='\t')
-    johnny = np.loadtxt('johnny_teams16-17.txt', dtype=str)
-    taro = np.loadtxt('taro_teams16-17.txt', dtype=str, delimiter='\t')
-    
-    # Creates values for table of picks based on pick order
-    person_dict = {'vicki': vicki, 'johnny': johnny, 'taro': taro}
     pick_order = np.loadtxt('pickorder.txt', dtype=str, delimiter='\t')
+    teamids = [(key,value['name'],value['id']) for key,value in team.TEAMS.iteritems()]
+    
+    person_dict = {}
+    team_bettor = {}
+    team_pickorder = []
+    remaining_games = {}
+    for bettor in pick_order:
+        bettor = bettor.lower()
+        bettor_teams = np.loadtxt(bettor+'_teams16-17.txt', dtype=str, delimiter='\t')
+        team_pickorder.append(list(bettor_teams))
+        person_dict[bettor] = [z for z in teamids if z[1].startswith(tuple(bettor_teams))]
+        iteam_bettor = {iteam:bettor for iteam in bettor_teams}
+        team_bettor.update(iteam_bettor)
+        remaining_games[bettor] = 0
 
-    team_pickorder = [pick_order[0], pick_order[1], pick_order[2]]
-    for i in range(10):
-        team_pickorder += [person_dict[pick_order[0]][i], 
-                            person_dict[pick_order[1]][i], 
-                            person_dict[pick_order[2]][i]]
-                            
-    vicki_ids = []
-    johnny_ids = []
-    taro_ids = []
+    team_pickorder = [val for pair in zip(team_pickorder[0],team_pickorder[1],team_pickorder[2]) for val in pair] 
     
-    # Get the IDs for each team
-    for t in team.TEAMS.keys():
-        
-        tm = team.TEAMS[t]
-        
-        if np.any(vicki == tm['name']):
-            vicki_ids.append(tm['id'])
-        elif np.any(johnny == tm['name']):
-            johnny_ids.append(tm['id'])
-        elif np.any(taro == tm['name']):
-            taro_ids.append(tm['id'])
-        else:
-            raise ValueError('{0} not on any team!'.format(tm['name']))
-    
-    ids = {'Vicki': vicki_ids, 'Johnny':johnny_ids, 'Taro':taro_ids}
+    team_pickorder = list(pick_order) +team_pickorder
     
     # Calculate total wins and losses to date
-    vrecord, jrecord, trecord = calc_current_wins(vicki_ids, johnny_ids, taro_ids)
-    vwins = vrecord[0]; vloss = vrecord[1]
-    jwins = jrecord[0]; jloss = jrecord[1]
-    twins = trecord[0]; tloss = trecord[1]
+    records, order = calc_current_wins(person_dict)
     
     # Calculate maximum remaining wins left
-    vwins_remain, jwins_remain, twins_remain = calc_remaining_wins(vicki, johnny, taro)
+    remaining_games = calc_remaining_wins(team_bettor, remaining_games)
     
     # Calculate each W-L record as a function of time for graph
-    wins_losses = create_graph_data(vicki_ids, johnny_ids, taro_ids)
+    wins_losses = create_graph_data(person_dict)
     
     # Plot the graph and save as image
-    plot_graph(wins_losses)
-    
+    plot_graph(wins_losses,list(pick_order))
+  
     # Generate updated HTML file
-    current_totals = pd.DataFrame(index=['Vicki', 'Johnny', 'Taro'], columns=['wins', 'losses', 'remaining'])
-    current_totals.loc['Vicki'] = [vwins, vloss, vwins_remain]
-    current_totals.loc['Johnny'] = [jwins, jloss, jwins_remain]
-    current_totals.loc['Taro'] = [twins, tloss, twins_remain]
-    make_html(current_totals, team_pickorder)
-    make_bettor_html(current_totals,ids)
+    current_totals = pd.DataFrame(index=list(pick_order), columns=['wins', 'losses', 'remaining'])
+    for i, bettor in enumerate(order):
+        current_totals.loc[bettor] = records[i] + [remaining_games[bettor]]
+
+    make_html(current_totals, order, team_pickorder)
+    make_bettor_html(current_totals,person_dict)
