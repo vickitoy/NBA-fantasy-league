@@ -7,108 +7,98 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 from nba_py import team
 import time
+import pytz
 
 SEASON = '2016-17'
-START_DATE = '10/25/2016'
-today = dt.datetime.now() - dt.timedelta(hours=6)
-TODAY = today.date()
-#STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
-STR_TODAY = '10/26/2016'
+START_DATE = '2016-10-25'
+END_DATE = '2017-04-12'
+tz = pytz.timezone('EST')
+today = dt.datetime.now(tz)
+STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
 
 def calc_current_wins(person_dict):
 
-    win_loss = []
-    order = []
+    idx = pd.date_range(START_DATE, END_DATE)
     for person in person_dict:
-        iwin_loss = [0,0]
         print person
-        for bteam in person_dict[person]:
-            print bteam
-            ts = team.TeamSummary(bteam[2], season=SEASON).info()
+        for order,bteam in enumerate(person_dict[person]):
+            print bteam['teamname']
+            ts = team.TeamGameLogs(bteam['id'], season=SEASON).info()[['GAME_DATE', 'WL']] 
             
-            iwin_loss[0] += ts['W'][0]
-            iwin_loss[1] += ts['L'][0]
-            time.sleep(1)
-        win_loss.append(iwin_loss)
-        order.append(person)
-    return win_loss, order
-     
-   
-def calc_remaining_wins(team_bettor, bettor_remaining):
+            ts['GAME_DATE'] = pd.to_datetime(ts['GAME_DATE'])
+            ts = ts.set_index(['GAME_DATE']).reindex(idx, fill_value='-').truncate(after=STR_TODAY)
+            ts['losses'] = ts['WL'].cumsum().str.count('L')
+            ts['wins'] = ts['WL'].cumsum().str.count('W') 
+            ts['remaining'] = 82-ts['wins']-ts['losses'] 
+            ts = ts.drop('WL', axis=1)
+            person_dict[person][order]['df'] = ts         
+            #time.sleep(1)
 
-    # Upload the current schedule
+    return person_dict
+   
+def calc_duplicate_remaining_games(team_bettor, pick_order):
+
+    bettor_remaining = {person: 0 for person in pick_order}
+
+    # Upload the current schedule and convert date to timestamp
     nba_sched = pd.read_csv('2016_schedule.txt', index_col=0)
-    
-    # Convert the date to a Timestamp
     nba_sched.index = pd.to_datetime(nba_sched.index)
     
     # Get today's date
-    today = dt.date.today().isoformat()
+    today = dt.datetime.strptime(STR_TODAY, '%m/%d/%Y').isoformat()   
     
-    # Remove all of the games that have already been played. Right now assumes today's
+    # Remove all of the games that have already been played. Assumes today's
     # games haven't been played yet.
     nba_sched_remain = nba_sched.loc[nba_sched.index >= today]
     
-    # Loop through the remaining games. Assume exactly 1 win for every game a person has
-    # a team playing in. If they have 2 teams playing each other, that only counts a 1 win
-    
+    # Count remaining games where bettor plays themselves
     for game in np.unique(nba_sched_remain.index):
     
         home_teams = nba_sched_remain.loc[game, 'Home/Neutral']
         away_teams = nba_sched_remain.loc[game, 'Visitor/Neutral']
-
         
         for i in range(len(home_teams)):
             ht = home_teams[i].split()[-1]
             at = away_teams[i].split()[-1]
 
-            if ht == 'Blazers':
-                ht = 'Trail Blazers'
-            if at == 'Blazers':
-                at = 'Trail Blazers'
-                
-            if ht == '76ers':
-                ht = 'Sixers'
-            if at == '76ers':
-                at = 'Sixers'
+            ht = ht.replace('Blazers', 'Trail Blazers')
+            at = at.replace('Blazers', 'Trail Blazers')
+            ht = ht.replace('76ers', 'Sixers')
+            at = at.replace('76ers', 'Sixers')
 
             if team_bettor[ht] == team_bettor[at]:
                 bettor_remaining[team_bettor[ht]] += 1
-            else:
-                bettor_remaining[team_bettor[ht]] += 1
-                bettor_remaining[team_bettor[at]] += 1
-    
+
     return bettor_remaining
     
-def create_graph_data(person_dict):
+def create_graph_data(person_dict,dup_remaining_games):
 
     sched_dates = pd.date_range(start=START_DATE, end=STR_TODAY)
     
     column_names = [i+'_win' for i in person_dict.keys()] + [i+'_losses' for i in person_dict.keys()]
     
-    df = pd.DataFrame(index=sched_dates, columns=column_names)
+    df_bettor = pd.DataFrame()
     
+    bettor_summary = {}
     for bettor in person_dict:
-    
-        for tup in person_dict[bettor]:
-            id = tup[2]
-            data = team.TeamGameLogs(id, season=SEASON).info()[['GAME_DATE', 'WL']]
-            df[bettor+'_wins'] = 0
-            df[bettor+'_losses'] = 0
-            if not data.empty:
-                data.index = pd.to_datetime(data['GAME_DATE'])
-                data = data.sort_index()
-                for d in df.index:
-                    df.loc[d, bettor+'_wins'] = df.loc[d, bettor+'_wins']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'W')
-                    df.loc[d, bettor+'_losses'] = df.loc[d, bettor+'_losses']+np.sum(data.loc[df.index[0]:d, 'WL'] == 'L')
-            time.sleep(1)
-        df[bettor+'_winperc'] = df[bettor+'_wins']/(df[bettor+'_wins']+df[bettor+'_losses'])
+        bettor_summary[bettor] = np.array([0,0,0])
+        for i,iteam in enumerate(person_dict[bettor]):
+            if i == 0:
+                df = iteam['df']
+            else:
+                df += iteam['df']
                 
-        df.fillna(value=0, inplace=True)
-        df[bettor+'_diff'] = df[bettor+'_wins'] - df[bettor+'_losses']
+            bettor_summary[bettor] += (iteam['df']['wins'].iloc[-1], iteam['df']['losses'].iloc[-1],iteam['df']['remaining'].iloc[-1])
+        
+        df_bettor[bettor+'_wins'] = df['wins']
+        df_bettor[bettor+'_losses'] = df['losses']
+        df_bettor[bettor+'_winperc'] = df_bettor[bettor+'_wins']/(df_bettor[bettor+'_wins']+df_bettor[bettor+'_losses'])
+                
+        df_bettor[bettor+'_diff'] = df_bettor[bettor+'_wins'] - df_bettor[bettor+'_losses']
+        bettor_summary[bettor][2] -= dup_remaining_games[bettor]
     
-    return df       
- 
+    return df_bettor, bettor_summary
+
 
 def plot_graph(wins_losses, pick_order): 
      # Plot winning percentage as a function of time
@@ -128,15 +118,12 @@ def make_html(current_totals, order, team_pickorder):
     with open('../template.html', 'r') as ftemp:
         temp = ftemp.read()
     
-    current_totals = current_totals.sort_values('wins', ascending=False)
-    current_winner = current_totals.index[0] 
+    current_winner = max([(v[0],k) for k,v in bettor_summary.iteritems()])[1]
     
     html_string = [STR_TODAY, current_winner]
     
     for bettor in order:
-        html_string += [bettor,bettor, current_totals.loc[bettor]['wins'],
-                        current_totals.loc[bettor]['losses'],
-                        current_totals.loc[bettor]['remaining']]
+        html_string += [bettor,bettor] + list(current_totals[bettor])
 
     html_string += team_pickorder
               
@@ -149,26 +136,17 @@ def make_html(current_totals, order, team_pickorder):
     return
     
 def make_bettor_html(current_totals, person_dict):
-    
-    current_totals = current_totals.sort_values('wins', ascending=False)
-    current_winner = current_totals.index[0] 
-    
+
     for person in person_dict:
         with open('../template_bettor.html', 'r') as ftemp:
             temp = ftemp.read()   
 
-        bettor_records = []
-        for bteam in person_dict[person]:
-            t = team.TeamSummary(bteam[2], season=SEASON).info()
-            bettor_records += [t['TEAM_NAME'][0], t['W'][0], t['L'][0], 82-t['W'][0]-t['L'][0]]
-            time.sleep(1)
+        team_list = []
+        for iteam in person_dict[person]:
+            team_list += [iteam['teamname'],iteam['df']['wins'].iloc[-1], iteam['df']['losses'].iloc[-1],iteam['df']['remaining'].iloc[-1]]
 
-        html_string = [person,
-                      current_totals.loc[person]['wins'],
-                      current_totals.loc[person]['losses'],
-                      current_totals.loc[person]['remaining']] + bettor_records
-    
-                      
+        html_string = [person] + list(current_totals[person]) + team_list
+         
         print html_string
         updated = temp % tuple(html_string)
                       
@@ -177,45 +155,34 @@ def make_bettor_html(current_totals, person_dict):
      
     return
 
-
 if __name__ == '__main__':
     
     pick_order = np.loadtxt('pickorder.txt', dtype=str, delimiter='\t')
-    teamids = [(key,value['name'],value['id']) for key,value in team.TEAMS.iteritems()]
+    teamids = {value['name']:value['id'] for key,value in team.TEAMS.iteritems()}
     
     person_dict = {}
-    team_bettor = {}
-    team_pickorder = []
-    remaining_games = {}
     for bettor in pick_order:
         bettor = bettor.lower()
         bettor_teams = np.loadtxt(bettor+'_teams16-17.txt', dtype=str, delimiter='\t')
-        team_pickorder.append(list(bettor_teams))
-        person_dict[bettor] = [z for z in teamids if z[1].startswith(tuple(bettor_teams))]
-        iteam_bettor = {iteam:bettor for iteam in bettor_teams}
-        team_bettor.update(iteam_bettor)
-        remaining_games[bettor] = 0
-
-    team_pickorder = [val for pair in zip(team_pickorder[0],team_pickorder[1],team_pickorder[2]) for val in pair] 
+        
+        person_dict[bettor] = [{'teamname':iteam, 'id':teamids[iteam]} for iteam in bettor_teams]
     
-    team_pickorder = list(pick_order) +team_pickorder
+    team_bettor = {iteam['teamname']:ibettor for ibettor in person_dict for iteam in person_dict[ibettor]}
     
     # Calculate total wins and losses to date
-    records, order = calc_current_wins(person_dict)
+    person_dict = calc_current_wins(person_dict)
     
     # Calculate maximum remaining wins left
-    remaining_games = calc_remaining_wins(team_bettor, remaining_games)
-    
+    dup_remaining_games = calc_duplicate_remaining_games(team_bettor, pick_order)
+
     # Calculate each W-L record as a function of time for graph
-    wins_losses = create_graph_data(person_dict)
-    
+    wins_losses, bettor_summary = create_graph_data(person_dict, dup_remaining_games)
+        
     # Plot the graph and save as image
     plot_graph(wins_losses,list(pick_order))
-  
-    # Generate updated HTML file
-    current_totals = pd.DataFrame(index=list(pick_order), columns=['wins', 'losses', 'remaining'])
-    for i, bettor in enumerate(order):
-        current_totals.loc[bettor] = records[i] + [remaining_games[bettor]]
 
-    make_html(current_totals, order, team_pickorder)
-    make_bettor_html(current_totals,person_dict)
+    team_pickorder = list(pick_order) + [person_dict[bettor][i]['teamname'] for i in range(10) for bettor in pick_order]
+    
+    # Generate updated HTML file
+    make_html(bettor_summary, pick_order, team_pickorder)
+    make_bettor_html(bettor_summary,person_dict)
