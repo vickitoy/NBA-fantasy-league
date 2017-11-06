@@ -9,12 +9,13 @@ from nba_py import team
 import time
 import pytz
 
-SEASON = '2016-17'
-START_DATE = '2016-10-25'
-END_DATE = '2017-04-12'
+SEASON = '2017-18'
+START_DATE = '2017-10-16'
 tz = pytz.timezone('EST')
 today = dt.datetime.now(tz)
 STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
+END_DATE = '%i-%i-%i' % (today.year, today.month, today.day)
+
 
 def calc_current_wins(person_dict):
 
@@ -27,12 +28,13 @@ def calc_current_wins(person_dict):
             
             ts['GAME_DATE'] = pd.to_datetime(ts['GAME_DATE'])
             ts = ts.set_index(['GAME_DATE']).reindex(idx, fill_value='-').truncate(after=STR_TODAY)
+            ts.fillna(value='-', inplace=True)
             ts['losses'] = ts['WL'].cumsum().str.count('L')
             ts['wins'] = ts['WL'].cumsum().str.count('W') 
             ts['remaining'] = 82-ts['wins']-ts['losses'] 
             ts = ts.drop('WL', axis=1)
             person_dict[person][order]['df'] = ts         
-            #time.sleep(1)
+            time.sleep(1)
 
     return person_dict
    
@@ -41,7 +43,7 @@ def calc_duplicate_remaining_games(team_bettor, pick_order):
     bettor_remaining = {person: 0 for person in pick_order}
 
     # Upload the current schedule and convert date to timestamp
-    nba_sched = pd.read_csv('2016_schedule.txt', index_col=0)
+    nba_sched = pd.read_csv('2017_schedule.txt', index_col=0)
     nba_sched.index = pd.to_datetime(nba_sched.index)
     
     # Get today's date
@@ -50,22 +52,26 @@ def calc_duplicate_remaining_games(team_bettor, pick_order):
     # Remove all of the games that have already been played. Assumes today's
     # games haven't been played yet.
     nba_sched_remain = nba_sched.loc[nba_sched.index >= today]
-    
+
     # Count remaining games where bettor plays themselves
     for game in np.unique(nba_sched_remain.index):
     
         home_teams = nba_sched_remain.loc[game, 'Home/Neutral']
         away_teams = nba_sched_remain.loc[game, 'Visitor/Neutral']
         
+        if isinstance(home_teams, str):
+            home_teams = [home_teams]
+            away_teams = [away_teams]
+        
         for i in range(len(home_teams)):
             ht = home_teams[i].split()[-1]
-            at = away_teams[i].split()[-1]
+            at = away_teams[i].split()[-1]  
 
             ht = ht.replace('Blazers', 'Trail Blazers')
             at = at.replace('Blazers', 'Trail Blazers')
             ht = ht.replace('76ers', 'Sixers')
             at = at.replace('76ers', 'Sixers')
-
+            
             if team_bettor[ht] == team_bettor[at]:
                 bettor_remaining[team_bettor[ht]] += 1
 
@@ -163,7 +169,7 @@ if __name__ == '__main__':
     person_dict = {}
     for bettor in pick_order:
         bettor = bettor.lower()
-        bettor_teams = np.loadtxt(bettor+'_teams16-17.txt', dtype=str, delimiter='\t')
+        bettor_teams = np.loadtxt(bettor+'_teams17-18.txt', dtype=str, delimiter='\t')
         
         person_dict[bettor] = [{'teamname':iteam, 'id':teamids[iteam]} for iteam in bettor_teams]
     
