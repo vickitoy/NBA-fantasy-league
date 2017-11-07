@@ -80,9 +80,7 @@ def calc_duplicate_remaining_games(team_bettor, pick_order):
 def create_graph_data(person_dict,dup_remaining_games):
 
     sched_dates = pd.date_range(start=START_DATE, end=STR_TODAY)
-    
-    column_names = [i+'_win' for i in person_dict.keys()] + [i+'_losses' for i in person_dict.keys()]
-    
+        
     df_bettor = pd.DataFrame()
     
     bettor_summary = {}
@@ -90,7 +88,7 @@ def create_graph_data(person_dict,dup_remaining_games):
         bettor_summary[bettor] = np.array([0,0,0])
         for i,iteam in enumerate(person_dict[bettor]):
             if i == 0:
-                df = iteam['df']
+                df = iteam['df'].copy()
             else:
                 df += iteam['df']
                 
@@ -126,17 +124,19 @@ def make_html(current_totals, order, team_pickorder):
     
     current_winner = max([(v[0],k) for k,v in bettor_summary.iteritems()])[1]
     
-    html_string = [STR_TODAY, current_winner]
+    html_string = [STR_TODAY, current_winner.title()]
     
     for bettor in order:
-        html_string += [bettor,bettor] + list(current_totals[bettor])
+        html_string += [bettor.title(),bettor.title()] + list(current_totals[bettor])
+
+    team_pickorder = [bettor.title() for bettor in team_pickorder]
 
     html_string += team_pickorder
               
     print html_string
     updated = temp % tuple(html_string)
                       
-    with open('../index.html', 'w') as findex:
+    with open('../bet.html', 'w') as findex:
         findex.write(updated)
         
     return
@@ -151,12 +151,12 @@ def make_bettor_html(current_totals, person_dict):
         for iteam in person_dict[person]:
             team_list += [iteam['teamname'],iteam['df']['wins'].iloc[-1], iteam['df']['losses'].iloc[-1],iteam['df']['remaining'].iloc[-1]]
 
-        html_string = [person] + list(current_totals[person]) + team_list
+        html_string = [person.title()] + list(current_totals[person]) + team_list
          
         print html_string
         updated = temp % tuple(html_string)
                       
-        with open('../'+person+'.html', 'w') as findex:
+        with open('../'+person.title()+'.html', 'w') as findex:
             findex.write(updated)
      
     return
