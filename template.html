@@ -1,82 +1,116 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
+<!--
+	Hyperspace by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
 <html>
+	<head>
+		<title>NBA Fantasy Bet</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+	</head>
+	<body>
 
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Nba-fantasy-league : ">
+		<!-- Sidebar -->
+			<section id="sidebar">
+				<div class="inner">
+					<nav>
+						<ul>
+							<li><a href="#intro">Welcome</a></li>
+							<li><a href="#one">The Bet</a></li>
+							<li><a href="#two">The Picks</a></li>
+							<li><a href="#three">The Hall of Fame</a></li>
+						</ul>
+					</nav>
+				</div>
+			</section>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+		<!-- Wrapper -->
+			<div id="wrapper">
 
-    <title>Nba-fantasy-league</title>
-  </head>
+				<!-- Intro -->
+					<section id="intro" class="wrapper style1 fullscreen fade-up">
+						<div class="inner">
+							<h1>NBA Fantasy Bet</h1>
+							<p>30 teams. 3 friends. 1 trophy. </p>
+							<ul class="actions">
+								<li><a href="#one" class="button scrolly">Learn more</a></li>
+							</ul>
 
-  <body>
+						</div>
+					</section>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <h1 id="project_title">Nba-fantasy-league</h1>
-          <h2 id="project_tagline"></h2>
-        </header>
-    </div>
+				<!-- One -->
+					<section id="one" class="wrapper style2 spotlights">
+						<section>
+							<a href="#" class="image"><img src="images/originalbet.jpg" alt="" data-position="center center" /></a>
+							<div class="content">
+								<div class="inner">
+									<h2>The Bet</h2>
+									<p>Each bettor chooses 10 teams in an S-curve draft. The order is determined by an intense game of paper basketball. The winner's teams has the most cumulative wins at the end of the season.</p>
+								</div>
+							</div>
+						</section>
+						<section>
+							<a href="#" class="image"><img src="images/current_winner.jpg" alt="" id="imageid" data-position="top center" /></a>
+							<script>document.getElementById("imageid").src = "images/current_winner_"+%s+".jpg"</script>
+							<div class="content">
+								<div class="inner">
+									<h2>Current Winner (as of %s)</h2>
+									<p>%s</p>
+								</div>
+							</div>
+						</section>
+						<section>
+							<a href="#" class="image"><img src="images/win_percent.png" alt="" data-position="25% 25%" /></a>
+							<div class="content">
+								<div class="inner">
+									<h2>The Numbers</h2>
+<table border="1">
+<tr>
+<td></td>
+<td align="center"><h3><a href=bettors.html#one>%s</a></h3></td>
+<td align="center"><h3><a href=bettors.html#one>%s</a></h3></td>
+<td align="center"><h3><a href=bettors.html#one>%s</a></h3></td>
+</tr>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h1>
-<a id="the-bet-is-on" class="anchor" href="#the-bet-is-on" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The bet is on.</h1>
-<img src='images/originalbet.jpg' alt='Original Bet' width=600>
+<tr>
+<td>Wins</td>
+<td align="center">%i</td>
+<td align="center">%i</td>
+<td align="center">%i</td>
+</tr>
 
-<h1>
-<a id="current-winner-of-2016-17-season" class="anchor" href="#current-winner-of-2016-17-season" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Current winner of 2017-18 Season (as of %s):</h1>
+<tr>
+<td>Losses</td>
+<td align="center">%i</td>
+<td align="center">%i</td>
+<td align="center">%i</td>
+</tr>
 
-<h2>
-<a id="none" class="anchor" href="#none" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong>%s</strong>
-</h2>
+<tr>
+<td>Remaining</td>
+<td align="center">%i</td>
+<td align="center">%i</td>
+<td align="center">%i</td>
+</tr>
 
-<h2>
-<a class="anchor" href=%s.html aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span>%s</a></h2>
+</table>
+								</div>
+							</div>
+						</section>
+					</section>
 
-<p>Wins: %i<br>
-Losses: %i<br>
-Remaining wins available: %i</p>
-
-<h2>
-<a class="anchor" href=%s.html aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span>%s</a></h2>
-
-<p>Wins: %i<br>
-Losses: %i<br>
-Remaining wins available: %i</p>
-
-<h2>
-
-<a class="anchor" href=%s.html aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span>%s</a></h2>
-
-<p>Wins: %i<br>
-Losses: %i<br>
-Remaining wins available: %i</p>
-
-
-<img src='pythoncode/win_percent.png' alt='Winning Percentage Over Time'>
-<h1>
-<a id="hall-of-fame" class="anchor" href="#hall-of-fame" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><a href=halloffame.html>Hall of Fame:</a></h1>
-
-<h1>
-<a id="winner-of-2016-17-season" class="anchor" href="#winner-of-2016-17-season" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Winner of 2016-17 Season:</h1>
-
-<h2>
-<a id="johnny-1" class="anchor" href="#johnny-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong><a href=past_seasons/16-17/win_percent.png>Johnny</a></strong>
-</h2>
-
-<h1>
-<a id="winner-of-2015-16-season" class="anchor" href="#winner-of-2015-16-season" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Winner of 2015-16 Season:</h1>
-
-<h2>
-<a id="taro-1" class="anchor" href="#taro-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong>Taro</strong>
-</h2>
-
-<h2> Current teams </h2>
+				<!-- Two -->
+					<section id="two" class="wrapper style3 fade-up">
+						<div class="inner">
+							
+<h2> The Picks </h2>
 <table border="1">
 <tr>
 <td><h3>%s</h3></td>
@@ -84,80 +118,103 @@ Remaining wins available: %i</p>
 <td><h3>%s</h3></td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>1. %s</td>
+<td>2. %s</td>
+<td>3. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>6. %s</td>
+<td>5. %s</td>
+<td>4. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>7. %s</td>
+<td>8. %s</td>
+<td>9. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>12. %s</td>
+<td>11. %s</td>
+<td>10. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>13. %s</td>
+<td>14. %s</td>
+<td>15. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>18. %s</td>
+<td>17. %s</td>
+<td>16. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>19. %s</td>
+<td>20. %s</td>
+<td>21. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>24. %s</td>
+<td>23. %s</td>
+<td>22. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>25. %s</td>
+<td>26. %s</td>
+<td>27. %s</td>
 </tr>
 <tr>
-<td>%s</td>
-<td>%s</td>
-<td>%s</td>
+<td>30. %s</td>
+<td>29. %s</td>
+<td>28. %s</td>
 </tr>
 </table>
 
-<h2> Trade rules </h2>
-<p> The trade deadline matches the NBA trade deadline which typically follows
-the All-Star break. The stipulations are as follows:
-<ul>
-    <li> Unlimited 1-for-1 trades that are mutually beneficial for both parties 
-        before the trade deadline </li>
-    <li> Maximum of 2 total tilted trades (beneficial for one party), limited to 1 
-        before the trade deadline and 1 after the trade deadline </li>
-    <li> Maximum of 1 trade after the trade deadline </li>
-</ul>
+						</div>
+					</section>
 
-</p>
-      </section>
-    </div>
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Nba-fantasy-league maintained by <a href="https://github.com/vickitoy">vickitoy</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
+				<!-- Three -->
+					<section id="three" class="wrapper style2 spotlights">
+						<section>
+							<a href="#" class="image"><img src="images/Winner2016-17.jpg" alt="" data-position="center center" /></a>
+							<div class="content">
+								<div class="inner">
+									<h2>2016-17 Season Winner</h2>
+									<p>Johnny</p>
+									<ul class="actions">
+										<li><a href="past_seasons/16-17/win_percent.png" class="button">Past chart</a></li>
+									</ul>
+								</div>
+							</div>
+						</section>
+						<section>
+							<a href="#" class="image"><img src="images/Winner2015-16.jpg" alt="" data-position="top center" /></a>
+							<div class="content">
+								<div class="inner">
+									<h2>2015-16 Season Winner</h2>
+									<p>Taro</p>
 
-    
+								</div>
+							</div>
+						</section>
 
-  </body>
+
+		<!-- Footer -->
+			<footer id="footer" class="wrapper style1-alt">
+				<div class="inner">
+					<ul class="menu">
+						<li>&copy; Untitled. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+					</ul>
+				</div>
+			</footer>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/skel.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+			<script src="assets/js/main.js"></script>
+
+	</body>
 </html>

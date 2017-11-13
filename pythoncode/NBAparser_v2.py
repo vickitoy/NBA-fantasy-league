@@ -8,6 +8,7 @@ import seaborn as sn
 from nba_py import team
 import time
 import pytz
+import os
 
 SEASON = '2017-18'
 START_DATE = '2017-10-16'
@@ -107,12 +108,12 @@ def create_graph_data(person_dict,dup_remaining_games):
 def plot_graph(wins_losses, pick_order): 
      # Plot winning percentage as a function of time
     sn.set(color_codes=True)
-    fig = plt.figure(figsize=(6.5, 3))
+    fig = plt.figure(figsize=(6.5, 6.5))
     ax = fig.add_subplot(111)
     ax = wins_losses.plot(y=[pick_order[0]+'_diff', pick_order[1]+'_diff', pick_order[2]+'_diff'], ax=ax)
     ax.legend(pick_order, loc='lower left')    
     ax.set_ylabel('Wins - Losses', fontsize=12)
-    fig.savefig('win_percent.png', bbox_inches='tight')
+    fig.savefig('../images/win_percent.png', bbox_inches='tight')
     plt.close(fig)
     
     return 
@@ -124,11 +125,17 @@ def make_html(current_totals, order, team_pickorder):
     
 
     current_winner = max([(v[0],k) for k,v in bettor_summary.iteritems()])[1]
+        
+    html_string = [current_winner, STR_TODAY, current_winner.title()]
     
-    html_string = [STR_TODAY, current_winner.title()]
-    
+    wins, losses, remaining = [],[],[]
     for bettor in order:
-        html_string += [bettor.title(),bettor.title()] + list(current_totals[bettor])
+        html_string += [bettor.title()]
+        wins.append(current_totals[bettor][0])
+        losses.append(current_totals[bettor][1])
+        remaining.append(current_totals[bettor][2])
+    
+    html_string += wins + losses + remaining
 
     team_pickorder = [bettor.title() for bettor in team_pickorder]
 
@@ -142,23 +149,25 @@ def make_html(current_totals, order, team_pickorder):
         
     return
     
-def make_bettor_html(current_totals, person_dict):
+def make_bettor_html(current_totals, pick_order, person_dict):
 
-    for person in person_dict:
-        with open('../template_bettor.html', 'r') as ftemp:
-            temp = ftemp.read()   
+    with open('../template_bettor.html', 'r') as ftemp:
+        temp = ftemp.read()
+    html_string = [person for person in pick_order]
+    for person in pick_order:
+  
 
         team_list = []
         for iteam in person_dict[person]:
             team_list += [iteam['teamname'],iteam['df']['wins'].iloc[-1], iteam['df']['losses'].iloc[-1],iteam['df']['remaining'].iloc[-1]]
 
-        html_string = [person.title()] + list(current_totals[person]) + team_list
+        html_string += [person.title()] + list(current_totals[person]) + team_list
          
-        print html_string
-        updated = temp % tuple(html_string)
-                      
-        with open('../'+person.title()+'.html', 'w') as findex:
-            findex.write(updated)
+    updated = temp % tuple(html_string)
+    
+    print html_string                  
+    with open('../bettors.html', 'w') as findex:
+        findex.write(updated)
      
     return
 
@@ -192,4 +201,4 @@ if __name__ == '__main__':
     
     # Generate updated HTML file
     make_html(bettor_summary, pick_order, team_pickorder)
-    make_bettor_html(bettor_summary,person_dict)
+    make_bettor_html(bettor_summary, pick_order, person_dict)
