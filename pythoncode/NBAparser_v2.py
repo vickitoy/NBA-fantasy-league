@@ -105,7 +105,9 @@ def create_graph_data(person_dict,dup_remaining_games):
     return df_bettor, bettor_summary
 
 
-def plot_graph(wins_losses, pick_order): 
+def plot_graph_recent(wins_losses, pick_order): 
+    wins_losses = wins_losses[today - dt.timedelta(days=30):today]
+
      # Plot winning percentage as a function of time
     sn.set(color_codes=True)
     fig = plt.figure(figsize=(6.5, 6.5))
@@ -113,7 +115,20 @@ def plot_graph(wins_losses, pick_order):
     ax = wins_losses.plot(y=[pick_order[0]+'_diff', pick_order[1]+'_diff', pick_order[2]+'_diff'], ax=ax)
     ax.legend(pick_order, loc='lower left')    
     ax.set_ylabel('Wins - Losses', fontsize=12)
-    fig.savefig('../images/win_percent.png', bbox_inches='tight')
+    fig.savefig('../images/win_percent_recent.png', bbox_inches='tight')
+    plt.close(fig)
+    
+    return 
+
+def plot_graph_all(wins_losses, pick_order): 
+     # Plot winning percentage as a function of time
+    sn.set(color_codes=True)
+    fig = plt.figure(figsize=(6.5, 3))
+    ax = fig.add_subplot(111)
+    ax = wins_losses.plot(y=[pick_order[0]+'_diff', pick_order[1]+'_diff', pick_order[2]+'_diff'], ax=ax)
+    ax.legend(pick_order, loc='lower left')    
+    ax.set_ylabel('Wins - Losses', fontsize=12)
+    fig.savefig('../images/win_percent_all.png', bbox_inches='tight')
     plt.close(fig)
     
     return 
@@ -195,7 +210,8 @@ if __name__ == '__main__':
     wins_losses, bettor_summary = create_graph_data(person_dict, dup_remaining_games)
         
     # Plot the graph and save as image
-    plot_graph(wins_losses,list(pick_order))
+    plot_graph_recent(wins_losses,list(pick_order))
+    plot_graph_all(wins_losses,list(pick_order))
 
     team_pickorder = list(pick_order) + [person_dict[bettor][i]['teamname'] for i in range(10) for bettor in pick_order]
     
