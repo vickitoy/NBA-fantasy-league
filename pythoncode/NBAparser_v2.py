@@ -18,7 +18,7 @@ STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
 END_DATE = '%i-%i-%i' % (today.year, today.month, today.day)
 
 
-def calc_current_wins(person_dict):
+def calc_current_wins(person_dict, team_bettor):
 
     idx = pd.date_range(START_DATE, END_DATE)
     for person in person_dict:
@@ -26,24 +26,27 @@ def calc_current_wins(person_dict):
         for order,bteam in enumerate(person_dict[person]):
             print bteam['teamname']
             ts = team.TeamGameLogs(bteam['id'], season=SEASON).info()[['GAME_DATE', 'WL']]
+            ts = ts.dropna()
 
             ts['GAME_DATE'] = pd.to_datetime(ts['GAME_DATE'])
-            last10games = sum(ts.dropna()['WL'][:10].str.count('W'))
+            last10games = sum(ts['WL'][:10].str.count('W'))
             ts = ts.set_index(['GAME_DATE']).reindex(idx, fill_value='-').truncate(after=STR_TODAY)
             ts.fillna(value='-', inplace=True)
             ts['losses'] = ts['WL'].cumsum().str.count('L')
             ts['wins'] = ts['WL'].cumsum().str.count('W')
+            ts['diff'] = ts['wins'] - ts['losses']
             ts['remaining'] = 82-ts['wins']-ts['losses']
             ts = ts.drop('WL', axis=1)
             person_dict[person][order]['L10'] = '%i-%i' % (last10games, max(10-last10games, 0))
             person_dict[person][order]['df'] = ts
-            time.sleep(1)
+            time.sleep(0.1)
 
     return person_dict
 
-def calc_duplicate_remaining_games(team_bettor, pick_order):
+def calc_duplicate_remaining_games(team_bettor):
 
-    bettor_remaining = {person: 0 for person in pick_order}
+
+    bettor_remaining = {bettor:0 for bettor in set(team_bettor.values())}
 
     # Upload the current schedule and convert date to timestamp
     nba_sched = pd.read_csv('2017_schedule.txt', index_col=0)
@@ -70,11 +73,6 @@ def calc_duplicate_remaining_games(team_bettor, pick_order):
             ht = home_teams[i].split()[-1]
             at = away_teams[i].split()[-1]
 
-            ht = ht.replace('Blazers', 'Trail Blazers')
-            at = at.replace('Blazers', 'Trail Blazers')
-            ht = ht.replace('76ers', 'Sixers')
-            at = at.replace('76ers', 'Sixers')
-
             if team_bettor[ht] == team_bettor[at]:
                 bettor_remaining[team_bettor[ht]] += 1
 
@@ -97,11 +95,6 @@ def todays_games(team_bettor):
     for index, row in nba_sched_today.iterrows():
         ht = row['HomeShort']
         at = row['VisitorShort']
-
-        ht = ht.replace('Blazers', 'Trail Blazers')
-        at = at.replace('Blazers', 'Trail Blazers')
-        ht = ht.replace('76ers', 'Sixers')
-        at = at.replace('76ers', 'Sixers')
 
         games += ' '.join(['<tr><td>',ht,'('+team_bettor[ht].title()+')','</td><td>',at,'('+team_bettor[at].title()+')</td></tr>'])
 
@@ -150,7 +143,7 @@ def plot_graph_recent(wins_losses, pick_order):
 
     return
 
-def plot_graph_all(wins_losses, pick_order):
+def plot_graph_all(wins_losses, pick_order, person_dict):
      # Plot winning percentage as a function of time
     sn.set(color_codes=True)
     fig = plt.figure(figsize=(6.5, 3))
@@ -160,6 +153,21 @@ def plot_graph_all(wins_losses, pick_order):
     ax.set_ylabel('Wins - Losses', fontsize=12)
     fig.savefig('../images/win_percent_all.png', bbox_inches='tight')
     plt.close(fig)
+
+    sn.set_palette(sn.color_palette("hls", 10))
+    #sn.palplot(sn.color_palette("Blues_d"))
+    for person in person_dict:
+        fig = plt.figure(figsize=(10, 6.5))
+        ax = fig.add_subplot(111)
+        for i in range(10):
+            if i == 0:
+                person_dict[person][i]['df'].plot(y='diff', label=person_dict[person][i]['teamname'], ax=ax)
+            else:
+                person_dict[person][i]['df'].plot( y='diff', label=person_dict[person][i]['teamname'], ax=ax)
+        ax.set_ylabel('Wins - Losses', fontsize=12)
+        order = str(list(pick_order).index(person)+1)
+        fig.savefig('../images/'+order+'_teams.png', bbox_inches='tight')
+        plt.close(fig)
 
     return
 
@@ -220,29 +228,33 @@ def make_bettor_html(current_totals, pick_order, person_dict):
 if __name__ == '__main__':
 
     pick_order = np.loadtxt('pickorder.txt', dtype=str, delimiter='\t')
-    teamids = {value['name']:value['id'] for key,value in team.TEAMS.iteritems()}
+    teamids = {value['name']:(value['id'],value['abbr']) for key,value in team.TEAMS.iteritems()}
 
     person_dict = {}
     for bettor in pick_order:
         bettor = bettor.lower()
         bettor_teams = np.loadtxt(bettor+'_teams17-18.txt', dtype=str, delimiter='\t')
 
-        person_dict[bettor] = [{'teamname':iteam, 'id':teamids[iteam]} for iteam in bettor_teams]
+        person_dict[bettor] = [{'teamname':iteam, 'id':teamids[iteam][0], 'abbr':teamids[iteam][1]} for iteam in bettor_teams]
 
-    team_bettor = {iteam['teamname']:ibettor for ibettor in person_dict for iteam in person_dict[ibettor]}
+    # Make dictionary with team names and abbreviations to quickly look up which bettor each team is associated with
+    team_bettor = {k:v for ibettor in person_dict for iteam in person_dict[ibettor] for k,v in ((iteam['teamname'],ibettor), (iteam['abbr'],ibettor))}
+
+    team_bettor['Blazers'] = team_bettor['Trail Blazers']
+    team_bettor['76ers'] = team_bettor['Sixers']
 
     # Calculate total wins and losses to date
-    person_dict = calc_current_wins(person_dict)
+    person_dict = calc_current_wins(person_dict, team_bettor)
 
     # Calculate maximum remaining wins left
-    dup_remaining_games = calc_duplicate_remaining_games(team_bettor, pick_order)
+    dup_remaining_games = calc_duplicate_remaining_games(team_bettor)
 
     # Calculate each W-L record as a function of time for graph
     wins_losses, bettor_summary = create_graph_data(person_dict, dup_remaining_games)
 
     # Plot the graph and save as image
     plot_graph_recent(wins_losses,list(pick_order))
-    plot_graph_all(wins_losses,list(pick_order))
+    plot_graph_all(wins_losses,list(pick_order), person_dict)
 
     team_pickorder = list(pick_order) + [person_dict[bettor][i]['teamname'] for i in range(10) for bettor in pick_order]
 
