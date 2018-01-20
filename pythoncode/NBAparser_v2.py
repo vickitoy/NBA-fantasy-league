@@ -39,7 +39,7 @@ def calc_current_wins(person_dict, team_bettor):
             ts = ts.drop('WL', axis=1)
             person_dict[person][order]['L10'] = '%i-%i' % (last10games, max(10-last10games, 0))
             person_dict[person][order]['df'] = ts
-            time.sleep(0.1)
+            time.sleep(0.5)
 
     return person_dict
 
@@ -96,7 +96,7 @@ def todays_games(team_bettor):
         ht = row['HomeShort']
         at = row['VisitorShort']
 
-        games += ' '.join(['<tr><td>',ht,'('+team_bettor[ht].title()+')','</td><td>',at,'('+team_bettor[at].title()+')</td></tr>'])
+        games += html_table_add_row([ht + ' ('+team_bettor[ht].title()+')',at + ' ('+team_bettor[at].title()+')'])
 
     return games
 
@@ -210,20 +210,29 @@ def make_bettor_html(current_totals, pick_order, person_dict):
     html_string = [person for person in pick_order]
     for person in pick_order:
 
-
-        team_list = []
+        team_list = ''
         for iteam in person_dict[person]:
-            team_list += [iteam['teamname'],iteam['df']['wins'].iloc[-1], iteam['df']['losses'].iloc[-1],iteam['df']['remaining'].iloc[-1], iteam['L10']]
+            team_list += html_table_add_row([iteam['teamname'],
+                                             iteam['df']['wins'].iloc[-1],
+                                             iteam['df']['losses'].iloc[-1],
+                                             iteam['df']['remaining'].iloc[-1],
+                                             iteam['L10']], align="center")
 
-        html_string += [person.title()] + list(current_totals[person]) + team_list
+        html_string += [person.title()] + list(current_totals[person]) + [team_list]
 
     updated = temp % tuple(html_string)
 
-    print html_string
     with open('../bettors.html', 'w') as findex:
         findex.write(updated)
 
     return
+
+def html_table_add_row(element_list, align="left"):
+    connector = '    </td><td align="'+align+'">'
+    table_str = '  <tr><td align="'+align+'">'
+    table_str += connector.join(str(e) for e in element_list)
+    table_str += '  </td></tr>'
+    return table_str
 
 if __name__ == '__main__':
 
