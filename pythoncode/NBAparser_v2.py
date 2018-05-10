@@ -10,6 +10,7 @@ import time
 import pytz
 import os
 
+schedule_file = '2017_schedule.txt'
 SEASON = '2017-18'
 START_DATE = '2017-10-16'
 tz = pytz.timezone('EST')
@@ -49,7 +50,7 @@ def calc_duplicate_remaining_games(team_bettor):
     bettor_remaining = {bettor:0 for bettor in set(team_bettor.values())}
 
     # Upload the current schedule and convert date to timestamp
-    nba_sched = pd.read_csv('2017_schedule.txt', index_col=0)
+    nba_sched = pd.read_csv(schedule_file, index_col=0)
     nba_sched.index = pd.to_datetime(nba_sched.index)
 
     # Get today's date
@@ -80,7 +81,7 @@ def calc_duplicate_remaining_games(team_bettor):
 
 def todays_games(team_bettor):
     # Upload the current schedule and convert date to timestamp
-    nba_sched = pd.read_csv('2017_schedule.txt', index_col=0)
+    nba_sched = pd.read_csv(schedule_file, index_col=0)
     nba_sched.index = pd.to_datetime(nba_sched.index)
 
     # Get today's date
@@ -102,8 +103,6 @@ def todays_games(team_bettor):
 
 
 def create_graph_data(person_dict,dup_remaining_games):
-
-    sched_dates = pd.date_range(start=START_DATE, end=STR_TODAY)
 
     df_bettor = pd.DataFrame()
 
@@ -128,23 +127,21 @@ def create_graph_data(person_dict,dup_remaining_games):
     return df_bettor, bettor_summary
 
 
-def plot_graph_recent(wins_losses, pick_order):
-    wins_losses = wins_losses[today - dt.timedelta(days=30):today]
+def plot_graph_all(wins_losses, pick_order, person_dict):
 
-     # Plot winning percentage as a function of time
+    wins_losses_30d = wins_losses[today - dt.timedelta(days=30):today]
+
+     # Plot winning percentage as a function of time for last 30 days
     sn.set(color_codes=True)
     fig = plt.figure(figsize=(6.5, 6.5))
     ax = fig.add_subplot(111)
-    ax = wins_losses.plot(y=[pick_order[0]+'_diff', pick_order[1]+'_diff', pick_order[2]+'_diff'], ax=ax)
+    ax = wins_losses_30d.plot(y=[pick_order[0]+'_diff', pick_order[1]+'_diff', pick_order[2]+'_diff'], ax=ax)
     ax.legend(pick_order, loc='lower left')
     ax.set_ylabel('Wins - Losses', fontsize=12)
     fig.savefig('../images/win_percent_recent.png', bbox_inches='tight')
     plt.close(fig)
 
-    return
-
-def plot_graph_all(wins_losses, pick_order, person_dict):
-     # Plot winning percentage as a function of time
+     # Plot winning percentage as a function of time for season so far
     sn.set(color_codes=True)
     fig = plt.figure(figsize=(6.5, 3))
     ax = fig.add_subplot(111)
@@ -154,8 +151,8 @@ def plot_graph_all(wins_losses, pick_order, person_dict):
     fig.savefig('../images/win_percent_all.png', bbox_inches='tight')
     plt.close(fig)
 
+    # Plot winning percentage for each bettor by team
     sn.set_palette(sn.color_palette("hls", 10))
-    #sn.palplot(sn.color_palette("Blues_d"))
     for person in person_dict:
         fig = plt.figure(figsize=(10, 6.5))
         ax = fig.add_subplot(111)
@@ -175,7 +172,6 @@ def make_html(current_totals, order, team_pickorder, team_bettor):
 
     with open('../template.html', 'r') as ftemp:
         temp = ftemp.read()
-
 
     current_winner = max([(v[0],k) for k,v in bettor_summary.iteritems()])[1]
 
@@ -262,7 +258,6 @@ if __name__ == '__main__':
     wins_losses, bettor_summary = create_graph_data(person_dict, dup_remaining_games)
 
     # Plot the graph and save as image
-    plot_graph_recent(wins_losses,list(pick_order))
     plot_graph_all(wins_losses,list(pick_order), person_dict)
 
     team_pickorder = list(pick_order) + [person_dict[bettor][i]['teamname'] for i in range(10) for bettor in pick_order]
