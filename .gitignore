@@ -1,1 +1,7 @@
 *.pyc
+venv/
+bet*.html
+assets/
+*_teams.png
+win_*.png
+current_winner.jpg
