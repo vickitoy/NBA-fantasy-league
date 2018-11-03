@@ -10,6 +10,7 @@ import seaborn as sn
 import time
 import pytz
 import os
+import shutil  
 
 import config
 from bettor import Bettor, Team
@@ -103,6 +104,8 @@ def make_html(person_list):
 
     # Person with the most wins
     current_winner = max([(person_obj.all_wins(), person_obj.name) for person_obj in person_list])[1]
+    
+    shutil.copyfile('../images/current_winner_'+current_winner+'.jpg', '../images/current_winner.jpg')  
 
     # Use html_string to dump information into HTML page
     html_string = [current_winner, STR_TODAY, current_winner.title()]
@@ -125,7 +128,6 @@ def make_html(person_list):
 
     # Today's games (by team and bettor)
     html_string += [todays_games(person_list)]
-    print html_string
     updated = temp % tuple(html_string)
 
     with open('../bet.html', 'w') as findex:
@@ -142,14 +144,16 @@ def make_bettor_html(person_list):
 
         team_list = ''
         # Summary of team information for a bettor
-        for teamname, team_obj in person_obj.team_objs.iteritems():
+        for teamname in person_obj.teams:
+            team_obj = person_obj.team_objs[teamname]
             team_list += html_table_add_row([teamname,
                                              team_obj.wins(),
                                              team_obj.losses(),
                                              team_obj.remaining(),
                                              team_obj.last10()], align="center")
 
-        html_string += [person_obj.name.title(), person_obj.all_wins(), person_obj.all_losses(), person_obj.all_remaining()-person_obj.dup_remaining_games(),team_list]
+        html_string += [person_obj.name.title(), person_obj.all_wins(), person_obj.all_losses(),
+                        person_obj.all_remaining()-person_obj.dup_remaining_games(),team_list]
 
     updated = temp % tuple(html_string)
 

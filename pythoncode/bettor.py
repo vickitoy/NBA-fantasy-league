@@ -83,12 +83,16 @@ class Team():
     def gamelog_proc(self):
         gamelog = team.TeamGameLogs(self.id, season=SEASON).info()[['GAME_DATE', 'WL']]
         gamelog['GAME_DATE'] = pd.to_datetime(gamelog['GAME_DATE'])
+        gamelog = gamelog[gamelog['GAME_DATE'] < today]
+        #gamelog = gamelog[gamelog['GAME_DATE'] < (today - dt.timedelta(days=2))]
+
         return gamelog
 
     # Calculate the last 10 games W-L (str)
     def last10(self):
         last10gameswins = sum(self.gamelog['WL'][:10].str.count('W'))
-        return '%i-%i' % (last10gameswins, max(10-last10gameswins, 0))
+        last10gameslosses = sum(self.gamelog['WL'][:10].str.count('L'))
+        return '%i-%i' % (last10gameswins, last10gameslosses)
 
     # The populated full calendar DF that fills in missing dates with a dash
     def full_calendar_gamelog(self):

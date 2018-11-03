@@ -1,4 +1,4 @@
-SEASON = '2017-18'
-START_DATE = '10/17/2017'
-SCHEDULE_FILE = '2017_schedule.txt'
-BET_FILE_POSTFIX = '_teams17-18.txt'
+SEASON = '2018-19'
+START_DATE = '10/16/2018'
+SCHEDULE_FILE = 'current_schedule.txt'
+BET_FILE_POSTFIX = '_teams.txt'
