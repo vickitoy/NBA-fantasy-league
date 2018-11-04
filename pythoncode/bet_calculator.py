@@ -23,7 +23,6 @@ tz = pytz.timezone('EST')
 today = dt.datetime.now(tz)
 STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
 
-
 def todays_games(person_list):
     team_bettor_dict = {team: person_obj.name for person_obj in person_list for team in person_obj.team_objs.keys()}
     team_bettor_dict['Blazers'] = team_bettor_dict['Trail Blazers']
@@ -111,14 +110,15 @@ def make_html(person_list):
     html_string = [current_winner, STR_TODAY, current_winner.title()]
 
     # Every bettor's quick stats
-    wins, losses, remaining = [],[],[]
+    wins, losses, remaining, draft_value = [],[],[],[]
     for person_obj in person_list:
         html_string += [person_obj.name.title()]
         wins.append(person_obj.all_wins())
         losses.append(person_obj.all_losses())
         remaining.append(person_obj.all_remaining()-person_obj.dup_remaining_games())
+        draft_value.append(person_obj.all_draft_value())
 
-    html_string += wins + losses + remaining
+    html_string += wins + losses + remaining + draft_value
 
     # Order of teams that were picked by a bettor
     # -> Bettor 1 pick 1, Bettor 2 pick 1, Bettor 3 pick 1, Bettor 1 pick 2, etc
