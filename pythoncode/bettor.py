@@ -82,6 +82,11 @@ class Bettor():
     def all_remaining(self):
         return len(self.teams)*82 - self.all_wins() - self.all_losses()
 
+    # Returns total draft value for bettor (float)
+    def all_draft_value(self):
+        return sum([self.team_objs[team].draft_value() for team in self.team_objs])
+
+
 class Team():
     """Class for a team that contains gamelog information and other
        useful utilities"""
