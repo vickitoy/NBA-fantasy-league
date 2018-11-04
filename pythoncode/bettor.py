@@ -3,10 +3,12 @@ import pytz
 import datetime as dt
 import pandas as pd
 import time
+import numpy as np
 
 import config
 
 schedule_file = config.SCHEDULE_FILE
+expected_wins_file = config.EXPECTED_WINS_FILE
 SEASON = config.SEASON
 START_DATE = config.START_DATE
 tz = pytz.timezone('EST')
@@ -19,6 +21,10 @@ idx = pd.date_range(START_DATE, END_DATE)
 nba_sched = pd.read_csv(schedule_file, index_col=0)
 nba_sched.index = pd.to_datetime(nba_sched.index)
 teamids = {value['name']:{'id': value['id'],'abbr':value['abbr']} for key,value in team.TEAMS.iteritems()}
+
+# Upload the expected wins based on pick order
+# Divide by 82 for winning percentrage
+expected_wins = np.loadtxt(expected_wins_file)/82.
 
 class Bettor():
     """Class for a bettor or person that has an array of Team objects and other
