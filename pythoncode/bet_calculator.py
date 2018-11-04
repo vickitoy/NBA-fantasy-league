@@ -23,7 +23,6 @@ tz = pytz.timezone('EST')
 today = dt.datetime.now(tz)
 STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
 
-
 def todays_games(person_list):
     team_bettor_dict = {team: person_obj.name for person_obj in person_list for team in person_obj.team_objs.keys()}
     team_bettor_dict['Blazers'] = team_bettor_dict['Trail Blazers']
@@ -48,6 +47,31 @@ def todays_games(person_list):
         games += html_table_add_row([ht + ' ('+team_bettor_dict[ht].title()+')',at + ' ('+team_bettor_dict[at].title()+')'])
 
     return games
+
+
+def determine_current_pick_order(person_list):
+    """
+    Assign a new pick number for every team based on current win percentage.
+    """
+    win_pct = pd.DataFrame(columns=['win pct'])
+    for person_obj in person_list:
+
+        for team in person_obj.teams:
+
+            team_obj = person_obj.team_objs[team]
+            s = pd.Series(name=team_obj.name, data={'win pct': float(team_obj.wins())/float(team_obj.wins()+team_obj.losses())})
+            win_pct = win_pct.append(s)
+
+    win_pct.sort_values('win pct', inplace=True, ascending=False)
+    win_pct['new pickno'] = range(1, 31)
+
+    for person_obj in person_list:
+
+        for team in person_obj.teams:
+
+            person_obj.team_objs[team].new_pickno = win_pct.loc[team, 'new pickno']
+
+    return
 
 
 def plot_graph_all(person_list):
@@ -111,18 +135,19 @@ def make_html(person_list):
     html_string = [current_winner, STR_TODAY, current_winner.title()]
 
     # Every bettor's quick stats
-    wins, losses, remaining = [],[],[]
+    wins, losses, remaining, draft_value = [],[],[],[]
     for person_obj in person_list:
         html_string += [person_obj.name.title()]
         wins.append(person_obj.all_wins())
         losses.append(person_obj.all_losses())
         remaining.append(person_obj.all_remaining()-person_obj.dup_remaining_games())
+        draft_value.append(person_obj.all_draft_value())
 
-    html_string += wins + losses + remaining
+    html_string += wins + losses + remaining + draft_value
 
     # Order of teams that were picked by a bettor
     # -> Bettor 1 pick 1, Bettor 2 pick 1, Bettor 3 pick 1, Bettor 1 pick 2, etc
-    team_pickorder = [person_obj.name.title() for person_obj in person_list] + [person_obj.teams[i] for i in range(10) for person_obj in person_list]
+    team_pickorder = [person_obj.name.title() for person_obj in person_list] + [person_obj.teams[i]+' ('+str(person_obj.team_objs[person_obj.teams[i]].new_pickno)+')' for i in range(10) for person_obj in person_list]
 
     html_string += team_pickorder
 
@@ -150,7 +175,9 @@ def make_bettor_html(person_list):
                                              team_obj.wins(),
                                              team_obj.losses(),
                                              team_obj.remaining(),
-                                             team_obj.last10()], align="center")
+                                             team_obj.last10(),
+                                             team_obj.expected_wins(),
+                                             team_obj.draft_value()], align="center")
 
         html_string += [person_obj.name.title(), person_obj.all_wins(), person_obj.all_losses(),
                         person_obj.all_remaining()-person_obj.dup_remaining_games(),team_list]
@@ -184,6 +211,9 @@ if __name__ == '__main__':
         bettor_obj = Bettor(bettor, order, bettor_teams)
 
         person_list += [bettor_obj]
+
+    # Add new pick number to each team
+    determine_current_pick_order(person_list)
 
     # Create graphs and html pages
     plot_graph_all(person_list)

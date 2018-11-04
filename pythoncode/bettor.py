@@ -3,22 +3,28 @@ import pytz
 import datetime as dt
 import pandas as pd
 import time
+import numpy as np
 
 import config
 
 schedule_file = config.SCHEDULE_FILE
+expected_wins_file = config.EXPECTED_WINS_FILE
 SEASON = config.SEASON
 START_DATE = config.START_DATE
 tz = pytz.timezone('EST')
 today = dt.datetime.now(tz)
 STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
 END_DATE = '%i-%i-%i' % (today.year, today.month, today.day)
-idx = pd.date_range(START_DATE, END_DATE)
+idx = pd.date_range(START_DATE, END_DATE, tz='UTC')
 
 # Upload the current schedule and convert date to timestamp
 nba_sched = pd.read_csv(schedule_file, index_col=0)
 nba_sched.index = pd.to_datetime(nba_sched.index)
 teamids = {value['name']:{'id': value['id'],'abbr':value['abbr']} for key,value in team.TEAMS.iteritems()}
+
+# Upload the expected wins based on pick order
+# Divide by 82 for winning percentage
+expected_win_pct = np.loadtxt(expected_wins_file)/82.
 
 class Bettor():
     """Class for a bettor or person that has an array of Team objects and other
@@ -28,14 +34,20 @@ class Bettor():
         self.name = name
         self.order = order
         self.teams = teams
+        if order == 0:
+            self.picks = [1, 6, 7, 12, 13, 18, 19, 24, 25, 30]
+        elif order == 1:
+            self.picks = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29]
+        else:
+            self.picks = [3, 4, 9, 10, 15, 16, 21, 22, 27, 28]
         self.team_objs = self.all_teams()
 
     # Creates dictionary of Team objects where the key is the teamname
     def all_teams(self):
         team_obj_dict = {}
-        for teamname in self.teams:
+        for teamname, pickno in zip(self.teams, self.picks):
             print teamname
-            team_obj_dict[teamname] = Team(teamname)
+            team_obj_dict[teamname] = Team(teamname, pickno)
             time.sleep(0.5)
         return team_obj_dict
 
@@ -70,19 +82,25 @@ class Bettor():
     def all_remaining(self):
         return len(self.teams)*82 - self.all_wins() - self.all_losses()
 
+    # Returns total draft value for bettor (float)
+    def all_draft_value(self):
+        return sum([self.team_objs[team].draft_value() for team in self.team_objs])
+
+
 class Team():
     """Class for a team that contains gamelog information and other
        useful utilities"""
-    def __init__(self, teamname):
+    def __init__(self, teamname, pickno):
         self.name = teamname
         self.id = teamids[self.name]['id']
         self.abbr = teamids[self.name]['abbr']
         self.gamelog = self.gamelog_proc()
+        self.pickno = pickno
 
     # Processes gamelog with correct parameters
     def gamelog_proc(self):
         gamelog = team.TeamGameLogs(self.id, season=SEASON).info()[['GAME_DATE', 'WL']]
-        gamelog['GAME_DATE'] = pd.to_datetime(gamelog['GAME_DATE'])
+        gamelog['GAME_DATE'] = pd.to_datetime(gamelog['GAME_DATE'], utc=True)
         gamelog = gamelog[gamelog['GAME_DATE'] < today]
         #gamelog = gamelog[gamelog['GAME_DATE'] < (today - dt.timedelta(days=2))]
 
@@ -125,3 +143,11 @@ class Team():
     # Team's number of remaining games in the season (int)
     def remaining(self):
         return 82-self.wins() - self.losses()
+
+    # Team's expected number of wins based on where they picked in draft (float)
+    def expected_wins(self):
+        return expected_win_pct[self.pickno-1]*(self.wins()+self.losses())
+
+    # Team's draft "value" (float)
+    def draft_value(self):
+        return self.wins() - self.expected_wins()
