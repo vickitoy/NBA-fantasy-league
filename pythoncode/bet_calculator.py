@@ -175,7 +175,9 @@ def make_bettor_html(person_list):
                                              team_obj.wins(),
                                              team_obj.losses(),
                                              team_obj.remaining(),
-                                             team_obj.last10()], align="center")
+                                             team_obj.last10(),
+                                             team_obj.expected_wins(),
+                                             team_obj.draft_value()], align="center")
 
         html_string += [person_obj.name.title(), person_obj.all_wins(), person_obj.all_losses(),
                         person_obj.all_remaining()-person_obj.dup_remaining_games(),team_list]
