@@ -49,6 +49,31 @@ def todays_games(person_list):
     return games
 
 
+def determine_current_pick_order(person_list):
+    """
+    Assign a new pick number for every team based on current win percentage.
+    """
+    win_pct = pd.DataFrame(columns=['win pct'])
+    for person_obj in person_list:
+
+        for team in person_obj.teams:
+
+            team_obj = person_obj.team_objs[team]
+            s = pd.Series(name=team_obj.name, data={'win pct': float(team_obj.wins())/float(team_obj.wins()+team_obj.losses())})
+            win_pct = win_pct.append(s)
+
+    win_pct.sort_values('win pct', inplace=True, ascending=False)
+    win_pct['new pickno'] = range(1, 31)
+
+    for person_obj in person_list:
+
+        for team in person_obj.teams:
+
+            person_obj.team_objs[team].new_pickno = win_pct.loc[team, 'new pickno']
+
+    return
+
+
 def plot_graph_all(person_list):
     """Creates bettor 30-day and all season Wins-Losses graphs and creates
        graphs that displays the Wins-Losses for a bettor's set of teams"""
@@ -122,7 +147,7 @@ def make_html(person_list):
 
     # Order of teams that were picked by a bettor
     # -> Bettor 1 pick 1, Bettor 2 pick 1, Bettor 3 pick 1, Bettor 1 pick 2, etc
-    team_pickorder = [person_obj.name.title() for person_obj in person_list] + [person_obj.teams[i] for i in range(10) for person_obj in person_list]
+    team_pickorder = [person_obj.name.title() for person_obj in person_list] + [person_obj.teams[i]+' ('+str(person_obj.team_objs[person_obj.teams[i]].new_pickno)+')' for i in range(10) for person_obj in person_list]
 
     html_string += team_pickorder
 
@@ -184,6 +209,9 @@ if __name__ == '__main__':
         bettor_obj = Bettor(bettor, order, bettor_teams)
 
         person_list += [bettor_obj]
+
+    # Add new pick number to each team
+    determine_current_pick_order(person_list)
 
     # Create graphs and html pages
     plot_graph_all(person_list)
