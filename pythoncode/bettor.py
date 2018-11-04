@@ -24,7 +24,7 @@ teamids = {value['name']:{'id': value['id'],'abbr':value['abbr']} for key,value 
 
 # Upload the expected wins based on pick order
 # Divide by 82 for winning percentrage
-expected_wins = np.loadtxt(expected_wins_file)/82.
+expected_win_pct = np.loadtxt(expected_wins_file)/82.
 
 class Bettor():
     """Class for a bettor or person that has an array of Team objects and other
@@ -45,9 +45,9 @@ class Bettor():
     # Creates dictionary of Team objects where the key is the teamname
     def all_teams(self):
         team_obj_dict = {}
-        for teamname in self.teams:
+        for teamname, pickno in zip(self.teams, self.picks):
             print teamname
-            team_obj_dict[teamname] = Team(teamname)
+            team_obj_dict[teamname] = Team(teamname, pickno)
             time.sleep(0.5)
         return team_obj_dict
 
@@ -85,11 +85,12 @@ class Bettor():
 class Team():
     """Class for a team that contains gamelog information and other
        useful utilities"""
-    def __init__(self, teamname):
+    def __init__(self, teamname, pickno):
         self.name = teamname
         self.id = teamids[self.name]['id']
         self.abbr = teamids[self.name]['abbr']
         self.gamelog = self.gamelog_proc()
+        self.pickno = pickno
 
     # Processes gamelog with correct parameters
     def gamelog_proc(self):
@@ -137,3 +138,7 @@ class Team():
     # Team's number of remaining games in the season (int)
     def remaining(self):
         return 82-self.wins() - self.losses()
+
+    # Team's expected number of wins based on where they picked in draft (float)
+    def expected_wins(self):
+        return expected_win_pct[self.pickno-1]*(self.wins()+self.losses())
