@@ -15,7 +15,7 @@ tz = pytz.timezone('EST')
 today = dt.datetime.now(tz)
 STR_TODAY = '%i/%i/%i' % (today.month, today.day, today.year)
 END_DATE = '%i-%i-%i' % (today.year, today.month, today.day)
-idx = pd.date_range(START_DATE, END_DATE)
+idx = pd.date_range(START_DATE, END_DATE, tz='UTC')
 
 # Upload the current schedule and convert date to timestamp
 nba_sched = pd.read_csv(schedule_file, index_col=0)
@@ -23,7 +23,7 @@ nba_sched.index = pd.to_datetime(nba_sched.index)
 teamids = {value['name']:{'id': value['id'],'abbr':value['abbr']} for key,value in team.TEAMS.iteritems()}
 
 # Upload the expected wins based on pick order
-# Divide by 82 for winning percentrage
+# Divide by 82 for winning percentage
 expected_win_pct = np.loadtxt(expected_wins_file)/82.
 
 class Bettor():
@@ -39,7 +39,7 @@ class Bettor():
         elif order == 1:
             self.picks = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29]
         else:
-            self.pickes = [3, 4, 9, 10, 15, 16, 21, 22, 27, 28]
+            self.picks = [3, 4, 9, 10, 15, 16, 21, 22, 27, 28]
         self.team_objs = self.all_teams()
 
     # Creates dictionary of Team objects where the key is the teamname
@@ -100,7 +100,7 @@ class Team():
     # Processes gamelog with correct parameters
     def gamelog_proc(self):
         gamelog = team.TeamGameLogs(self.id, season=SEASON).info()[['GAME_DATE', 'WL']]
-        gamelog['GAME_DATE'] = pd.to_datetime(gamelog['GAME_DATE'])
+        gamelog['GAME_DATE'] = pd.to_datetime(gamelog['GAME_DATE'], utc=True)
         gamelog = gamelog[gamelog['GAME_DATE'] < today]
         #gamelog = gamelog[gamelog['GAME_DATE'] < (today - dt.timedelta(days=2))]
 
