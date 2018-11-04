@@ -28,6 +28,12 @@ class Bettor():
         self.name = name
         self.order = order
         self.teams = teams
+        if order == 0:
+            self.picks = [1, 6, 7, 12, 13, 18, 19, 24, 25, 30]
+        elif order == 1:
+            self.picks = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29]
+        else:
+            self.pickes = [3, 4, 9, 10, 15, 16, 21, 22, 27, 28]
         self.team_objs = self.all_teams()
 
     # Creates dictionary of Team objects where the key is the teamname
