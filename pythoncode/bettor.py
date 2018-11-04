@@ -142,3 +142,7 @@ class Team():
     # Team's expected number of wins based on where they picked in draft (float)
     def expected_wins(self):
         return expected_win_pct[self.pickno-1]*(self.wins()+self.losses())
+
+    # Team's draft "value" (float)
+    def draft_value(self):
+        return self.wins() - self.expected_wins()
