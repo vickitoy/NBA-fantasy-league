@@ -24,7 +24,8 @@ teamids = {value['name']:{'id': value['id'],'abbr':value['abbr']} for key,value 
 
 # Upload the expected wins based on pick order
 # Divide by 82 for winning percentage
-expected_win_pct = np.loadtxt(expected_wins_file)/82.
+tbl = np.loadtxt(expected_wins_file)
+expected_win_pct = np.mean(tbl, axis=1)/82.
 
 class Bettor():
     """Class for a bettor or person that has an array of Team objects and other
