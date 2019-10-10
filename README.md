@@ -8,3 +8,6 @@ Outline
 -------
 
 Calculates wins and loses for a set of NBA teams for the season.
+
+Get schedule from this site:
+https://www.basketball-reference.com/leagues/NBA_2019_games-april.html

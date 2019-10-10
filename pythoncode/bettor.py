@@ -20,7 +20,7 @@ idx = pd.date_range(START_DATE, END_DATE, tz='UTC')
 # Upload the current schedule and convert date to timestamp
 nba_sched = pd.read_csv(schedule_file, index_col=0)
 nba_sched.index = pd.to_datetime(nba_sched.index)
-teamids = {value['name']:{'id': value['id'],'abbr':value['abbr']} for key,value in team.TEAMS.iteritems()}
+teamids = {value['name']:{'id': value['id'],'abbr':value['abbr']} for key,value in team.TEAMS.items()}
 
 # Upload the expected wins based on pick order
 # Divide by 82 for winning percentage
@@ -31,7 +31,7 @@ class Bettor():
     """Class for a bettor or person that has an array of Team objects and other
        useful utilities"""
     def __init__(self, name, order, teams):
-        print name
+        print(name)
         self.name = name
         self.order = order
         self.teams = teams
@@ -47,7 +47,7 @@ class Bettor():
     def all_teams(self):
         team_obj_dict = {}
         for teamname, pickno in zip(self.teams, self.picks):
-            print teamname
+            print(teamname)
             team_obj_dict[teamname] = Team(teamname, pickno)
             time.sleep(0.5)
         return team_obj_dict
