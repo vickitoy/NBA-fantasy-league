@@ -12,7 +12,7 @@ ipython-genutils==0.2.0
 kiwisolver==1.0.1
 matplotlib==2.2.2
 nba-py==0.1.1a2
-numpy==1.17.2
+numpy==1.22.0
 pandas==0.25.1
 pathlib2==2.3.2
 pexpect==4.5.0
